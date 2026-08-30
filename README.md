@@ -31,7 +31,7 @@ ______________________________________________________________________________
 |---|---|
 | Frontend | React + Tailwind CSS |
 | Backend | Node.js |
-| Banco de Dados | PostgresSQL |
+| Banco de Dados | PostgreSQL |
 | Agente(s) de IA / LLM | Codex / Claude / Gemini |
 
 ---
