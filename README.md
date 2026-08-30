@@ -6,6 +6,7 @@
 |---|---|
 | Guilherme Martins Dijan Domênico | Fullstack |
 | Mateus Ribeiro Quintão | Backend |
+| Lucas Soares Benfica | Fullstack |
 
 ---
 
