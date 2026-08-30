@@ -27,11 +27,12 @@ ______________________________________________________________________________
 
 ## Tecnologias
 
-- **Linguagem:** 
-- **Frontend:** 
-- **Backend:** 
-- **Banco de Dados:** 
-- **Agente(s) de IA:** 
+| Camada | Tecnologia |
+|---|---|
+| Frontend | React + Tailwind CSS |
+| Backend | Node.js |
+| Banco de Dados | PostgresSQL |
+| Agente(s) de IA / LLM | Codex / Claude / Gemini |
 
 ---
 
