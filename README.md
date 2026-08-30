@@ -5,6 +5,7 @@
 | Nome completo | Papel |
 |---|---|
 | Guilherme Martins Dijan Domênico | Fullstack |
+| Mateus Ribeiro Quintão | Backend |
 
 ---
 
@@ -20,7 +21,7 @@ O StudySync é uma plataforma web integrada voltada para a organização da vida
 * **Backend:** Node.js (com Fastify/Express)
 * **Banco de Dados:** PostgreSQL (com ORM)
 * **Infraestrutura:** Docker e Docker Compose
-* **Agentes de IA:** Integração com LLMs (ex: OpenAI API) para atuar como um assistente de estudos, sugerindo a quebra de trabalhos complexos em sub-tarefas menores e otimizando a distribuição de tempo no calendário com base nos prazos.
+* **Agentes de IA/LLM:** Codex, Claude Code, ChatGPT (LLM), Gemini
 
 ---
 
