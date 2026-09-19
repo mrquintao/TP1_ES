@@ -1,0 +1,59 @@
+# Docker Compose — StudySync
+# Sobe os 3 serviços: banco, backend e frontend
+# Uso: docker-compose up
+
+services:
+  # ==============================
+  # Banco de Dados PostgreSQL
+  # ==============================
+  db:
+    image: postgres:16-alpine
+    container_name: studysync-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: studysync
+      POSTGRES_PASSWORD: studysync123
+      POSTGRES_DB: studysync
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # ==============================
+  # Backend — Node.js + Fastify
+  # ==============================
+  backend:
+    build: ./backend
+    container_name: studysync-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://studysync:studysync123@db:5432/studysync
+      PORT: 3000
+      NODE_ENV: development
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # ==============================
+  # Frontend — React + Vite
+  # ==============================
+  frontend:
+    build: ./frontend
+    container_name: studysync-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:3000/api
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  pgdata:
