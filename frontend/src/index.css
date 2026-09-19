@@ -1,0 +1,10 @@
+/* Importações base do Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos globais do StudySync */
+body {
+  @apply bg-gray-50 text-gray-900 min-h-screen;
+  font-family: 'Inter', system-ui, sans-serif;
+}
