@@ -4,16 +4,17 @@ WORKDIR /app
 
 # Copia arquivos de dependência primeiro (melhor cache do Docker)
 COPY package*.json ./
+COPY prisma ./prisma/
 
 RUN npm install
-
-# Copia o restante do código
-COPY . .
 
 # Gera o Prisma Client
 RUN npx prisma generate
 
+# Copia o restante do código
+COPY . .
+
 EXPOSE 3000
 
-# Comando de desenvolvimento com hot-reload
-CMD ["npm", "run", "dev"]
+# Comando de desenvolvimento: sincroniza o banco e inicia com hot-reload
+CMD ["sh", "-c", "npx prisma db push && node --watch src/server.js"]

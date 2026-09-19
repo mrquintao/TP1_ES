@@ -2,9 +2,10 @@
   "name": "studysync-backend",
   "version": "1.0.0",
   "description": "Backend API do StudySync — Fastify + Prisma + PostgreSQL",
+  "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "dev": "npx prisma migrate deploy && node --watch src/server.js",
+    "dev": "npx prisma db push && node --watch src/server.js",
     "start": "node src/server.js",
     "db:migrate": "npx prisma migrate dev",
     "db:seed": "node prisma/seed.js",

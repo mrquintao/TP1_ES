@@ -1,6 +1,6 @@
 # Docker Compose — StudySync
 # Sobe os 3 serviços: banco, backend e frontend
-# Uso: docker-compose up
+# Uso: docker-compose up --build
 
 services:
   # ==============================
@@ -18,6 +18,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studysync"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
 
   # ==============================
   # Backend — Node.js + Fastify
@@ -33,7 +38,8 @@ services:
       PORT: 3000
       NODE_ENV: development
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - /app/node_modules
