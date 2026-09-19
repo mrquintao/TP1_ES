@@ -16,3 +16,11 @@ Ao codificar, alterar ou interagir com este repositório, você (IA) deve **estr
    - Inclua **pelo menos dois tipos diferentes de diagramas** (ex: Caso de Uso, Classes, Sequência, etc). Sempre que alterar a arquitetura, atualize os diagramas no README se necessário.
 
 5. **Testes Automatizados:** Para este primeiro escopo (TP1), testes automatizados serão **desconsiderados**. Concentre-se nas funcionalidades e na interface web (Backend + API + DB e Frontend Web).
+
+6. **⚠️ OBRIGATÓRIO: Testar ANTES de fazer Push:** Nenhum `git push` pode ser executado sem que a IA tenha **rodado e verificado** o projeto antes. Antes de qualquer push, você **DEVE** executar no mínimo:
+   - `npm install` no backend e no frontend (garantir que as dependências instalam sem erro).
+   - `npx vite build` no frontend (garantir que compila com 0 erros).
+   - `npx prisma generate` no backend (garantir que o Prisma Client é gerado).
+   - Se o Docker Desktop estiver disponível: `docker-compose up --build` (garantir que todos os serviços sobem).
+   - Verificar que o dev server do frontend abre corretamente (`http://localhost:5173`).
+   - **Se qualquer etapa falhar, corrija o problema ANTES de fazer push.** Nunca envie código quebrado para o repositório remoto. Os companheiros de equipe dependem de um código funcional.
