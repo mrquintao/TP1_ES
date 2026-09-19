@@ -1,0 +1,67 @@
+// Schema do Prisma — StudySync
+// Define os modelos do banco de dados PostgreSQL
+// Para aplicar alterações: npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Avaliação (prova, trabalho avaliativo, etc.)
+model Avaliacao {
+  id         Int      @id @default(autoincrement())
+  disciplina String
+  descricao  String?
+  peso       Float    @default(1.0)
+  dataRealizacao DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("avaliacoes")
+}
+
+// Trabalho em grupo
+model TrabalhoGrupo {
+  id           Int      @id @default(autoincrement())
+  titulo       String
+  disciplina   String?
+  prazoEntrega DateTime
+  linksUteis   String[] @default([])
+  status       String   @default("pendente") // pendente, em_andamento, concluido
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relação com membros do grupo
+  membros MembroGrupo[]
+
+  @@map("trabalhos_grupo")
+}
+
+// Membro de um trabalho em grupo
+model MembroGrupo {
+  id       Int    @id @default(autoincrement())
+  nome     String
+  escopo   String? // parte do trabalho que o membro é responsável
+
+  // Relação com o trabalho
+  trabalhoId Int
+  trabalho   TrabalhoGrupo @relation(fields: [trabalhoId], references: [id], onDelete: Cascade)
+
+  @@map("membros_grupo")
+}
+
+// Hábito ou tarefa recorrente
+model Habito {
+  id           Int      @id @default(autoincrement())
+  descricao    String
+  recorrencia  String   @default("diario") // diario, semanal
+  concluidoHoje Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("habitos")
+}
