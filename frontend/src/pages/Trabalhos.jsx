@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import LinksUteis from '../components/LinksUteis';
+import { parseLinks } from '../utils/links';
 
 /**
  * Página de Trabalhos em Grupo
@@ -16,6 +17,7 @@ export default function Trabalhos() {
   const [disciplina, setDisciplina] = useState('');
   const [prazoEntrega, setPrazoEntrega] = useState('');
   const [membrosInput, setMembrosInput] = useState('');
+  const [linksInput, setLinksInput] = useState('');
 
   const fetchTrabalhos = async () => {
     try {
@@ -45,8 +47,9 @@ export default function Trabalhos() {
       .map((nome) => ({ nome }));
 
     try {
-      await api.post('/trabalhos', { titulo, disciplina, prazoEntrega, membros });
-      setTitulo(''); setDisciplina(''); setPrazoEntrega(''); setMembrosInput('');
+      const linksUteis = parseLinks(linksInput);
+      await api.post('/trabalhos', { titulo, disciplina, prazoEntrega, membros, linksUteis });
+      setTitulo(''); setDisciplina(''); setPrazoEntrega(''); setMembrosInput(''); setLinksInput('');
       setShowForm(false);
       fetchTrabalhos();
     } catch (err) {
@@ -108,6 +111,12 @@ export default function Trabalhos() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Membros (separar por vírgula)</label>
             <input type="text" value={membrosInput} onChange={(e) => setMembrosInput(e.target.value)}
               placeholder="Ex: Guilherme, Mateus, Lucas"
+              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Links úteis (um por linha)</label>
+            <textarea rows={3} value={linksInput} onChange={(e) => setLinksInput(e.target.value)}
+              placeholder="Ex: https://drive.google.com/enunciado.pdf"
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none" />
           </div>
           <button type="submit" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition">
