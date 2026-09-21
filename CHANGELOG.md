@@ -11,7 +11,7 @@ Marquem com um `[x]` as tarefas e histórias de usuário que já foram implement
 - [ ] **História 4:** Visualizar compromissos em um calendário interativo com filtros por cor.
 - [ ] **História 6:** Receber alertas e notificações programadas via e-mail ou app.
 - [ ] **História 7:** Anexar links úteis e diretrizes dos professores aos trabalhos. *(Modelagem do DB já suporta, falta finalizar na UI)*
-- [ ] **História 8:** Checklist de hábitos reseta automaticamente à meia-noite. *(Rota `/api/habitos/reset` pronta no backend, falta o cron job/agendador para disparar sozinho)*
+- [x] **História 8:** Checklist de hábitos reseta automaticamente à meia-noite. *(Concluído: agendador com `node-cron` em `backend/src/jobs/resetHabitos.js`, roda às 00:00 no fuso America/Sao_Paulo; a rota `/api/habitos/reset` continua disponível para uso manual)*
 
 ## 🛠️ Infraestrutura, Base e Integração
 
