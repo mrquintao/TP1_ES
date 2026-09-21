@@ -10,7 +10,7 @@ Marquem com um `[x]` as tarefas e histórias de usuário que já foram implement
 - [x] **História 5:** Acessar abas dedicadas como "Meu Dia" e "Próximas Provas". *(Concluído: Página "Home / Meu Dia")*
 - [ ] **História 4:** Visualizar compromissos em um calendário interativo com filtros por cor.
 - [ ] **História 6:** Receber alertas e notificações programadas via e-mail ou app.
-- [ ] **História 7:** Anexar links úteis e diretrizes dos professores aos trabalhos. *(Modelagem do DB já suporta, falta finalizar na UI)*
+- [x] **História 7:** Anexar links úteis e diretrizes dos professores aos trabalhos. *(Concluído: links exibidos nos cards, campo no formulário de criação e adicionar/remover em trabalhos existentes, via componente `LinksUteis`. Diretrizes do professor entram como links, ex.: PDF do enunciado)*
 - [x] **História 8:** Checklist de hábitos reseta automaticamente à meia-noite. *(Concluído: agendador com `node-cron` em `backend/src/jobs/resetHabitos.js`, roda às 00:00 no fuso America/Sao_Paulo; a rota `/api/habitos/reset` continua disponível para uso manual)*
 
 ## 🛠️ Infraestrutura, Base e Integração
