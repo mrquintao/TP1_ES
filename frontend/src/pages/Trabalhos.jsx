@@ -57,6 +57,16 @@ export default function Trabalhos() {
     }
   };
 
+  // Salva a nova lista de links de um trabalho (usado ao adicionar/remover um link)
+  const atualizarLinks = async (id, linksUteis) => {
+    try {
+      await api.put(`/trabalhos/${id}`, { linksUteis });
+      fetchTrabalhos();
+    } catch (err) {
+      console.error('Erro ao atualizar links:', err);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!confirm('Tem certeza que deseja excluir?')) return;
     try {
@@ -142,7 +152,7 @@ export default function Trabalhos() {
                       </span>
                     ))}
                   </div>
-                  <LinksUteis links={t.linksUteis} />
+                  <LinksUteis links={t.linksUteis} onChange={(links) => atualizarLinks(t.id, links)} />
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor[t.status] || ''}`}>
