@@ -137,8 +137,10 @@ export default function Habitos() {
           {habitos.map((h) => (
             <div key={h.id}
               className="bg-white rounded-lg shadow p-4 flex justify-between items-center hover:bg-gray-50 transition">
-              <label className="flex items-center gap-3 cursor-pointer flex-1" onClick={() => toggleConcluido(h)}>
-                <input type="checkbox" checked={h.concluidoHoje} readOnly
+              {/* O toggle fica no onChange do checkbox: clicar na label já aciona o input,
+                  então um onClick na label disparava a requisição duas vezes. */}
+              <label className="flex items-center gap-3 cursor-pointer flex-1">
+                <input type="checkbox" checked={h.concluidoHoje} onChange={() => toggleConcluido(h)}
                   className="w-5 h-5 rounded text-primary cursor-pointer" />
                 <span className={h.concluidoHoje ? 'line-through text-gray-400' : 'text-gray-800'}>
                   {h.descricao}
