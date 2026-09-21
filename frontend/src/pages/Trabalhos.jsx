@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
+import LinksUteis from '../components/LinksUteis';
 
 /**
  * Página de Trabalhos em Grupo
@@ -132,6 +133,7 @@ export default function Trabalhos() {
                       </span>
                     ))}
                   </div>
+                  <LinksUteis links={t.linksUteis} />
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor[t.status] || ''}`}>
