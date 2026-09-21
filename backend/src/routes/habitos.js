@@ -3,6 +3,17 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
+ * Desmarca todos os hábitos diários (concluidoHoje = false).
+ * Usada pela rota POST /reset e pelo agendador da meia-noite (src/jobs).
+ */
+export async function resetarHabitosDiarios() {
+  await prisma.habito.updateMany({
+    where: { recorrencia: 'diario' },
+    data: { concluidoHoje: false },
+  });
+}
+
+/**
  * Rotas CRUD para Hábitos e tarefas recorrentes
  * Prefixo: /api/habitos
  */
@@ -58,13 +69,10 @@ export async function habitosRoutes(app) {
     }
   });
 
-  // POST /reset — Reseta todos os hábitos diários (concluidoHoje = false)
-  // Será chamado automaticamente à meia-noite ou manualmente
+  // POST /reset — Reseta todos os hábitos diários manualmente
+  // (o reset automático da meia-noite roda em src/jobs/resetHabitos.js)
   app.post('/reset', async () => {
-    await prisma.habito.updateMany({
-      where: { recorrencia: 'diario' },
-      data: { concluidoHoje: false },
-    });
+    await resetarHabitosDiarios();
     return { message: 'Hábitos diários resetados com sucesso' };
   });
 }
