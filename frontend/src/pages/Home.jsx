@@ -28,6 +28,18 @@ export default function Home() {
     fetchData();
   }, []);
 
+  // Marca/desmarca um hábito: salva na API e atualiza só esse item na lista
+  const toggleConcluido = async (habito) => {
+    try {
+      const res = await api.put(`/habitos/${habito.id}`, {
+        concluidoHoje: !habito.concluidoHoje,
+      });
+      setHabitos((atual) => atual.map((h) => (h.id === habito.id ? res.data : h)));
+    } catch (err) {
+      console.error('Erro ao atualizar hábito:', err);
+    }
+  };
+
   // Calcula dias restantes até uma data
   const diasRestantes = (data) => {
     const diff = new Date(data) - new Date();
@@ -92,7 +104,7 @@ export default function Home() {
                 <input
                   type="checkbox"
                   checked={h.concluidoHoje}
-                  readOnly
+                  onChange={() => toggleConcluido(h)}
                   className="w-5 h-5 rounded text-primary"
                 />
                 <span className={h.concluidoHoje ? 'line-through text-gray-400' : ''}>
