@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
+import { parseDataLocal } from '../utils/dates';
 
 /**
  * Página de Provas/Avaliações
@@ -32,7 +33,7 @@ export default function Provas() {
 
   // Calcula quantos dias faltam
   const diasRestantes = (data) => {
-    const diff = new Date(data) - new Date();
+    const diff = parseDataLocal(data) - new Date();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   };
 
@@ -118,7 +119,7 @@ export default function Provas() {
               <div>
                 <p className="font-semibold text-lg">{av.disciplina}</p>
                 <p className="text-sm text-gray-500">{av.descricao || 'Sem descrição'}</p>
-                <p className="text-xs text-gray-400 mt-1">Peso: {av.peso} • {new Date(av.dataRealizacao).toLocaleDateString('pt-BR')}</p>
+                <p className="text-xs text-gray-400 mt-1">Peso: {av.peso} • {parseDataLocal(av.dataRealizacao).toLocaleDateString('pt-BR')}</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="bg-primary/10 text-primary font-bold px-3 py-1 rounded-full text-sm">
