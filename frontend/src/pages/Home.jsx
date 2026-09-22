@@ -18,7 +18,12 @@ export default function Home() {
           api.get('/avaliacoes'),
           api.get('/habitos'),
         ]);
-        setAvaliacoes(resAval.data.slice(0, 5)); // top 5 próximas
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const proximasAvaliacoes = resAval.data
+          .filter((av) => parseDataLocal(av.dataRealizacao) >= hoje)
+          .slice(0, 5);
+        setAvaliacoes(proximasAvaliacoes);
         setHabitos(resHab.data);
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
