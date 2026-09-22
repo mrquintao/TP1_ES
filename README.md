@@ -5,7 +5,7 @@
 | Nome completo | Papel |
 |---|---|
 | Guilherme Martins Dijan Domênico | Fullstack |
-| Mateus Ribeiro Quintão | Backend |
+| Mateus Ribeiro Quintão | Fullstack |
 | Lucas Soares Benfica | Fullstack |
 
 ---

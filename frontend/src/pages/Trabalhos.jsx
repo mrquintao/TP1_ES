@@ -67,6 +67,15 @@ export default function Trabalhos() {
     }
   };
 
+  const atualizarStatus = async (id, status) => {
+    try {
+      const res = await api.put(`/trabalhos/${id}`, { status });
+      setTrabalhos((atual) => atual.map((t) => (t.id === id ? res.data : t)));
+    } catch (err) {
+      console.error('Erro ao atualizar status:', err);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!confirm('Tem certeza que deseja excluir?')) return;
     try {
@@ -155,9 +164,16 @@ export default function Trabalhos() {
                   <LinksUteis links={t.linksUteis} onChange={(links) => atualizarLinks(t.id, links)} />
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor[t.status] || ''}`}>
-                    {t.status}
-                  </span>
+                  <select
+                    value={t.status}
+                    onChange={(e) => atualizarStatus(t.id, e.target.value)}
+                    className={`px-2 py-1 rounded-full text-xs font-medium border-0 ${statusColor[t.status] || ''}`}
+                    aria-label={`Status do trabalho ${t.titulo}`}
+                  >
+                    <option value="pendente">Pendente</option>
+                    <option value="em_andamento">Em andamento</option>
+                    <option value="concluido">Concluído</option>
+                  </select>
                   <span className="bg-primary/10 text-primary font-bold px-3 py-1 rounded-full text-sm">
                     {diasRestantes(t.prazoEntrega)}d
                   </span>
