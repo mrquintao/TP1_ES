@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
+import { parseDataLocal } from '../utils/dates';
 
 /**
  * Home — Tela "Meu Dia" do StudySync
@@ -42,7 +43,7 @@ export default function Home() {
 
   // Calcula dias restantes até uma data
   const diasRestantes = (data) => {
-    const diff = new Date(data) - new Date();
+    const diff = parseDataLocal(data) - new Date();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   };
 
