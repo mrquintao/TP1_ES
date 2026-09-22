@@ -35,7 +35,7 @@ export async function avaliacoesRoutes(app) {
       data: {
         disciplina,
         descricao,
-        peso: peso || 1.0,
+        peso: peso ?? 1.0,
         dataRealizacao: new Date(dataRealizacao),
       },
     });
@@ -53,7 +53,7 @@ export async function avaliacoesRoutes(app) {
         data: {
           ...(disciplina && { disciplina }),
           ...(descricao !== undefined && { descricao }),
-          ...(peso && { peso }),
+          ...(peso !== undefined && { peso }),
           ...(dataRealizacao && { dataRealizacao: new Date(dataRealizacao) }),
         },
       });
