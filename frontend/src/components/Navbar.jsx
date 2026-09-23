@@ -15,6 +15,7 @@ export default function Navbar() {
     { to: '/provas', label: '📝 Provas' },
     { to: '/trabalhos', label: '👥 Trabalhos' },
     { to: '/habitos', label: '✅ Hábitos' },
+    { to: '/calendario', label: '🗓️ Calendário' },
   ];
 
   return (
