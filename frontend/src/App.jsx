@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Provas from './pages/Provas';
 import Trabalhos from './pages/Trabalhos';
 import Habitos from './pages/Habitos';
+import Calendario from './pages/Calendario';
 
 /**
  * App — Componente raiz do StudySync
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/provas" element={<Provas />} />
             <Route path="/trabalhos" element={<Trabalhos />} />
             <Route path="/habitos" element={<Habitos />} />
+            <Route path="/calendario" element={<Calendario />} />
           </Routes>
         </main>
       </div>

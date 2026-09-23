@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import { avaliacoesRoutes } from './routes/avaliacoes.js';
 import { trabalhosRoutes } from './routes/trabalhos.js';
 import { habitosRoutes } from './routes/habitos.js';
+import { calendarioRoutes } from './routes/calendario.js';
 import { agendarResetHabitos } from './jobs/resetHabitos.js';
 
 // Cria a instância do Fastify com logs ativados
@@ -17,6 +18,7 @@ await app.register(cors, {
 await app.register(avaliacoesRoutes, { prefix: '/api/avaliacoes' });
 await app.register(trabalhosRoutes, { prefix: '/api/trabalhos' });
 await app.register(habitosRoutes, { prefix: '/api/habitos' });
+await app.register(calendarioRoutes, { prefix: '/api/calendario' });
 
 // Agenda o reset diário dos hábitos (meia-noite)
 agendarResetHabitos(app.log);
