@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { parseDataLocal } from '../utils/dates';
+import SecaoUrgentes from '../components/SecaoUrgentes';
 
 /**
  * Home — Tela "Meu Dia" do StudySync
@@ -8,14 +9,17 @@ import { parseDataLocal } from '../utils/dates';
  */
 export default function Home() {
   const [avaliacoes, setAvaliacoes] = useState([]);
+  const [todasAvaliacoes, setTodasAvaliacoes] = useState([]); // sem o filtro de "só futuras", pra Urgentes
+  const [trabalhos, setTrabalhos] = useState([]);
   const [habitos, setHabitos] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [resAval, resHab] = await Promise.all([
+        const [resAval, resTrab, resHab] = await Promise.all([
           api.get('/avaliacoes'),
+          api.get('/trabalhos'),
           api.get('/habitos'),
         ]);
         const hoje = new Date();
@@ -24,6 +28,10 @@ export default function Home() {
           .filter((av) => parseDataLocal(av.dataRealizacao) >= hoje)
           .slice(0, 5);
         setAvaliacoes(proximasAvaliacoes);
+        // "Urgentes" olha todas as avaliações/trabalhos (não só as 5 próximas),
+        // então guarda a lista completa à parte da que a seção de provas usa.
+        setTodasAvaliacoes(resAval.data);
+        setTrabalhos(resTrab.data);
         setHabitos(resHab.data);
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
@@ -65,6 +73,9 @@ export default function Home() {
       <h1 className="text-3xl font-bold text-gray-800">
         📅 Meu Dia
       </h1>
+
+      {/* Seção: Urgentes — o que precisa de atenção primeiro fica no topo */}
+      <SecaoUrgentes avaliacoes={todasAvaliacoes} trabalhos={trabalhos} />
 
       {/* Seção: Próximas Provas */}
       <section>
