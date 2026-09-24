@@ -5,6 +5,7 @@ import { trabalhosRoutes } from './routes/trabalhos.js';
 import { habitosRoutes } from './routes/habitos.js';
 import { calendarioRoutes } from './routes/calendario.js';
 import { agendarResetHabitos } from './jobs/resetHabitos.js';
+import { agendarNotificacoes } from './jobs/notificacoes.js';
 
 // Cria a instância do Fastify com logs ativados
 const app = Fastify({ logger: true });
@@ -20,8 +21,9 @@ await app.register(trabalhosRoutes, { prefix: '/api/trabalhos' });
 await app.register(habitosRoutes, { prefix: '/api/habitos' });
 await app.register(calendarioRoutes, { prefix: '/api/calendario' });
 
-// Agenda o reset diário dos hábitos (meia-noite)
+// Agenda os jobs diários
 agendarResetHabitos(app.log);
+agendarNotificacoes(app.log);
 
 // Rota de health check
 app.get('/api/health', async () => {

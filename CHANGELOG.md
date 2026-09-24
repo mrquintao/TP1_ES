@@ -9,7 +9,7 @@ Marquem com um `[x]` as tarefas e histórias de usuário que já foram implement
 - [x] **História 3:** Configurar hábitos e tarefas recorrentes para acompanhamento num checklist diário. *(Concluído: Backend CRUD e Página "Hábitos")*
 - [x] **História 5:** Acessar abas dedicadas como "Meu Dia" e "Próximas Provas". *(Concluído: Página "Home / Meu Dia")*
 - [x] **História 4:** Visualizar compromissos em um calendário interativo com filtros por cor. *(Concluído: rota agregadora e página mensal com filtros para provas, trabalhos e hábitos)*
-- [ ] **História 6:** Receber alertas e notificações programadas via e-mail ou app.
+- [x] **História 6:** Receber alertas e notificações programadas via e-mail ou app. *(Concluído: job `notificacoes.js` envia e-mails diários de compromissos próximos via nodemailer)*
 - [x] **História 7:** Anexar links úteis e diretrizes dos professores aos trabalhos. *(Concluído: links exibidos nos cards, campo no formulário de criação e adicionar/remover em trabalhos existentes, via componente `LinksUteis`. Diretrizes do professor entram como links, ex.: PDF do enunciado)*
 - [x] **História 8:** Checklist de hábitos reseta automaticamente à meia-noite. *(Concluído: agendador com `node-cron` em `backend/src/jobs/resetHabitos.js`, roda às 00:00 no fuso America/Sao_Paulo; a rota `/api/habitos/reset` continua disponível para uso manual)*
 
