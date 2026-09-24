@@ -2,7 +2,9 @@ import { chaveData, TIPOS_EVENTO } from '../utils/calendario';
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-export default function GradeCalendario({ dias, eventos, mesAtual, onSelecionar }) {
+// mesReferencia: mês usado para esmaecer dias "fora do mês" (visão de mês).
+// null na visão de semana, onde os 7 dias fazem parte do período — nenhum fica esmaecido.
+export default function GradeCalendario({ dias, eventos, mesReferencia, onSelecionar }) {
   const eventosPorData = eventos.reduce((grupos, evento) => {
     (grupos[evento.data] ||= []).push(evento);
     return grupos;
@@ -19,7 +21,7 @@ export default function GradeCalendario({ dias, eventos, mesAtual, onSelecionar 
 
         {dias.map((dia) => {
           const data = chaveData(dia);
-          const foraDoMes = dia.getMonth() !== mesAtual.getMonth();
+          const foraDoMes = mesReferencia != null && dia.getMonth() !== mesReferencia.getMonth();
           const eventosDoDia = eventosPorData[data] || [];
 
           return (

@@ -1,20 +1,42 @@
 import { parseDataLocal } from '../utils/dates';
 import { TIPOS_EVENTO } from '../utils/calendario';
 
-export function NavegacaoMes({ mesAtual, onMudarMes }) {
-  const titulo = mesAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-
+// Navega o período em exibição (mês ou semana, um passo por vez).
+// Quem chama decide o que "um passo" significa — o componente só sabe o título já pronto.
+export function NavegacaoMes({ titulo, onMudarPeriodo }) {
   return (
     <div className="flex items-center gap-3">
-      <button type="button" onClick={() => onMudarMes(-1)}
-        className="rounded-lg border bg-white px-3 py-2 hover:bg-gray-50" aria-label="Mês anterior">
+      <button type="button" onClick={() => onMudarPeriodo(-1)}
+        className="rounded-lg border bg-white px-3 py-2 hover:bg-gray-50" aria-label="Período anterior">
         ‹
       </button>
       <h2 className="min-w-44 text-center text-lg font-semibold capitalize text-gray-700">{titulo}</h2>
-      <button type="button" onClick={() => onMudarMes(1)}
-        className="rounded-lg border bg-white px-3 py-2 hover:bg-gray-50" aria-label="Próximo mês">
+      <button type="button" onClick={() => onMudarPeriodo(1)}
+        className="rounded-lg border bg-white px-3 py-2 hover:bg-gray-50" aria-label="Próximo período">
         ›
       </button>
+    </div>
+  );
+}
+
+// Alterna entre a grade de mês e a de semana
+export function SeletorVisao({ visao, onMudar }) {
+  const opcoes = [['mes', 'Mês'], ['semana', 'Semana']];
+  return (
+    <div className="inline-flex rounded-lg border bg-white p-1" role="group" aria-label="Visão do calendário">
+      {opcoes.map(([valor, rotulo]) => (
+        <button
+          key={valor}
+          type="button"
+          onClick={() => onMudar(valor)}
+          aria-pressed={visao === valor}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            visao === valor ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          {rotulo}
+        </button>
+      ))}
     </div>
   );
 }

@@ -33,3 +33,24 @@ export function diasDaGrade(mesAtual) {
     return dia;
   });
 }
+
+// Os 7 dias (domingo a sábado) da semana que contém `data`
+export function diasDaSemana(data) {
+  const domingo = new Date(data);
+  domingo.setDate(data.getDate() - data.getDay());
+  return Array.from({ length: 7 }, (_, indice) => {
+    const dia = new Date(domingo);
+    dia.setDate(domingo.getDate() + indice);
+    return dia;
+  });
+}
+
+// Título da visão de semana, ex.: "21 – 27 de set. de 2026" ou,
+// quando a semana cruza o mês, "28 de set. – 4 de out. de 2026"
+export function tituloSemana(dias) {
+  const [inicio, fim] = [dias[0], dias[6]];
+  const mesmoMes = inicio.getMonth() === fim.getMonth() && inicio.getFullYear() === fim.getFullYear();
+  const tituloInicio = inicio.toLocaleDateString('pt-BR', mesmoMes ? { day: 'numeric' } : { day: 'numeric', month: 'short' });
+  const tituloFim = fim.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
+  return `${tituloInicio} – ${tituloFim}`;
+}

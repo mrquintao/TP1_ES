@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
 import GradeCalendario from '../components/GradeCalendario';
-import { DetalhesEvento, FiltrosCalendario, NavegacaoMes } from '../components/ControlesCalendario';
-import { chaveData, diasDaGrade } from '../utils/calendario';
+import { DetalhesEvento, FiltrosCalendario, NavegacaoMes, SeletorVisao } from '../components/ControlesCalendario';
+import { chaveData, diasDaGrade, diasDaSemana, tituloSemana } from '../utils/calendario';
 
 export default function Calendario() {
-  const [mesAtual, setMesAtual] = useState(() => new Date());
+  const [dataAtual, setDataAtual] = useState(() => new Date());
+  const [visao, setVisao] = useState('mes'); // 'mes' | 'semana'
   const [eventos, setEventos] = useState([]);
   const [selecionado, setSelecionado] = useState(null);
   // Hábitos começam desligados: como são diários, cada um aparece em quase todo
@@ -13,7 +14,13 @@ export default function Calendario() {
   const [filtros, setFiltros] = useState({ prova: true, trabalho: true, habito: false });
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(false);
-  const dias = useMemo(() => diasDaGrade(mesAtual), [mesAtual]);
+  const dias = useMemo(
+    () => (visao === 'mes' ? diasDaGrade(dataAtual) : diasDaSemana(dataAtual)),
+    [dataAtual, visao]
+  );
+  const titulo = visao === 'mes'
+    ? dataAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+    : tituloSemana(dias);
 
   useEffect(() => {
     async function buscarEventos() {
@@ -34,8 +41,14 @@ export default function Calendario() {
     buscarEventos();
   }, [dias]);
 
-  const mudarMes = (quantidade) => {
-    setMesAtual((atual) => new Date(atual.getFullYear(), atual.getMonth() + quantidade, 1));
+  // Um "passo" de navegação: um mês inteiro na visão de mês, 7 dias na de semana
+  const mudarPeriodo = (quantidade) => {
+    setDataAtual((atual) => {
+      if (visao === 'mes') return new Date(atual.getFullYear(), atual.getMonth() + quantidade, 1);
+      const proxima = new Date(atual);
+      proxima.setDate(atual.getDate() + quantidade * 7);
+      return proxima;
+    });
   };
 
   const alternarFiltro = (tipo) => {
@@ -52,14 +65,22 @@ export default function Calendario() {
       </div>
 
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <NavegacaoMes mesAtual={mesAtual} onMudarMes={mudarMes} />
+        <div className="flex flex-wrap items-center gap-3">
+          <NavegacaoMes titulo={titulo} onMudarPeriodo={mudarPeriodo} />
+          <SeletorVisao visao={visao} onMudar={setVisao} />
+        </div>
         <FiltrosCalendario filtros={filtros} onAlternar={alternarFiltro} />
       </div>
 
       {loading && <p className="py-8 text-center text-gray-500">Carregando calendário...</p>}
       {erro && <p className="rounded-lg bg-red-50 p-4 text-red-700">Não foi possível carregar os compromissos.</p>}
       {!loading && !erro && (
-        <GradeCalendario dias={dias} eventos={eventosVisiveis} mesAtual={mesAtual} onSelecionar={setSelecionado} />
+        <GradeCalendario
+          dias={dias}
+          eventos={eventosVisiveis}
+          mesReferencia={visao === 'mes' ? dataAtual : null}
+          onSelecionar={setSelecionado}
+        />
       )}
 
       <DetalhesEvento evento={selecionado} onFechar={() => setSelecionado(null)} />
