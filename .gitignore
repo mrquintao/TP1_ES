@@ -26,3 +26,6 @@ backend/prisma/migrations/
 
 # Docker
 docker-compose.override.yml
+
+# Notas locais de progresso (não vai pro repo)
+PROGRESSO.md
