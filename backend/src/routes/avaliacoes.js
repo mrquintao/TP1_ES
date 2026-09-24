@@ -28,7 +28,7 @@ export async function avaliacoesRoutes(app) {
 
   // POST / — Cria uma nova avaliação
   app.post('/', async (request, reply) => {
-    const { disciplina, descricao, peso, dataRealizacao } = request.body;
+    const { disciplina, descricao, peso, dataRealizacao, dataAlarme } = request.body;
 
     if (!disciplina || !dataRealizacao) {
       return reply.status(400).send({ error: 'Campos obrigatórios: disciplina, dataRealizacao' });
@@ -40,6 +40,7 @@ export async function avaliacoesRoutes(app) {
         descricao,
         peso: peso ?? 1.0,
         dataRealizacao: new Date(dataRealizacao),
+        dataAlarme: dataAlarme ? new Date(dataAlarme) : null,
       },
     });
     return reply.status(201).send(avaliacao);
@@ -48,7 +49,7 @@ export async function avaliacoesRoutes(app) {
   // PUT /:id — Atualiza uma avaliação existente
   app.put('/:id', async (request, reply) => {
     const { id } = request.params;
-    const { disciplina, descricao, peso, dataRealizacao } = request.body;
+    const { disciplina, descricao, peso, dataRealizacao, dataAlarme } = request.body;
 
     try {
       const avaliacao = await prisma.avaliacao.update({
@@ -58,6 +59,8 @@ export async function avaliacoesRoutes(app) {
           ...(descricao !== undefined && { descricao }),
           ...(peso !== undefined && { peso }),
           ...(dataRealizacao && { dataRealizacao: new Date(dataRealizacao) }),
+          // dataAlarme !== undefined também cobre limpar o alarme (enviar null ou "")
+          ...(dataAlarme !== undefined && { dataAlarme: dataAlarme ? new Date(dataAlarme) : null }),
         },
       });
       return avaliacao;

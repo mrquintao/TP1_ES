@@ -30,7 +30,7 @@ export async function trabalhosRoutes(app) {
 
   // POST / — Cria um novo trabalho (com membros opcionais)
   app.post('/', async (request, reply) => {
-    const { titulo, disciplina, prazoEntrega, linksUteis, membros } = request.body;
+    const { titulo, disciplina, prazoEntrega, dataAlarme, linksUteis, membros } = request.body;
 
     if (!titulo || !prazoEntrega) {
       return reply.status(400).send({ error: 'Campos obrigatórios: titulo, prazoEntrega' });
@@ -41,6 +41,7 @@ export async function trabalhosRoutes(app) {
         titulo,
         disciplina,
         prazoEntrega: new Date(prazoEntrega),
+        dataAlarme: dataAlarme ? new Date(dataAlarme) : null,
         linksUteis: linksUteis || [],
         membros: membros ? { create: membros } : undefined,
       },
@@ -52,7 +53,7 @@ export async function trabalhosRoutes(app) {
   // PUT /:id — Atualiza um trabalho existente
   app.put('/:id', async (request, reply) => {
     const { id } = request.params;
-    const { titulo, disciplina, prazoEntrega, linksUteis, status } = request.body;
+    const { titulo, disciplina, prazoEntrega, dataAlarme, linksUteis, status } = request.body;
 
     try {
       const trabalho = await prisma.trabalhoGrupo.update({
@@ -61,6 +62,8 @@ export async function trabalhosRoutes(app) {
           ...(titulo && { titulo }),
           ...(disciplina !== undefined && { disciplina }),
           ...(prazoEntrega && { prazoEntrega: new Date(prazoEntrega) }),
+          // dataAlarme !== undefined também cobre limpar o alarme (enviar null ou "")
+          ...(dataAlarme !== undefined && { dataAlarme: dataAlarme ? new Date(dataAlarme) : null }),
           ...(linksUteis && { linksUteis }),
           ...(status && { status }),
         },
