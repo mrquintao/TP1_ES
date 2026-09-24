@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma.js';
 
 /**
  * Rotas CRUD para Avaliações (provas, testes, etc.)
@@ -31,6 +29,11 @@ export async function avaliacoesRoutes(app) {
   // POST / — Cria uma nova avaliação
   app.post('/', async (request, reply) => {
     const { disciplina, descricao, peso, dataRealizacao } = request.body;
+
+    if (!disciplina || !dataRealizacao) {
+      return reply.status(400).send({ error: 'Campos obrigatórios: disciplina, dataRealizacao' });
+    }
+
     const avaliacao = await prisma.avaliacao.create({
       data: {
         disciplina,
@@ -58,8 +61,12 @@ export async function avaliacoesRoutes(app) {
         },
       });
       return avaliacao;
-    } catch {
-      return reply.status(404).send({ error: 'Avaliação não encontrada' });
+    } catch (err) {
+      if (err.code === 'P2025') {
+        return reply.status(404).send({ error: 'Avaliação não encontrada' });
+      }
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro interno do servidor' });
     }
   });
 
@@ -69,8 +76,12 @@ export async function avaliacoesRoutes(app) {
     try {
       await prisma.avaliacao.delete({ where: { id: Number(id) } });
       return reply.status(204).send();
-    } catch {
-      return reply.status(404).send({ error: 'Avaliação não encontrada' });
+    } catch (err) {
+      if (err.code === 'P2025') {
+        return reply.status(404).send({ error: 'Avaliação não encontrada' });
+      }
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro interno do servidor' });
     }
   });
 }

@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma.js';
 
 /**
  * Desmarca todos os hábitos diários (concluidoHoje = false).
@@ -29,6 +27,11 @@ export async function habitosRoutes(app) {
   // POST / — Cria um novo hábito
   app.post('/', async (request, reply) => {
     const { descricao, recorrencia } = request.body;
+
+    if (!descricao) {
+      return reply.status(400).send({ error: 'Campo obrigatório: descricao' });
+    }
+
     const habito = await prisma.habito.create({
       data: {
         descricao,
@@ -53,8 +56,12 @@ export async function habitosRoutes(app) {
         },
       });
       return habito;
-    } catch {
-      return reply.status(404).send({ error: 'Hábito não encontrado' });
+    } catch (err) {
+      if (err.code === 'P2025') {
+        return reply.status(404).send({ error: 'Hábito não encontrado' });
+      }
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro interno do servidor' });
     }
   });
 
@@ -64,8 +71,12 @@ export async function habitosRoutes(app) {
     try {
       await prisma.habito.delete({ where: { id: Number(id) } });
       return reply.status(204).send();
-    } catch {
-      return reply.status(404).send({ error: 'Hábito não encontrado' });
+    } catch (err) {
+      if (err.code === 'P2025') {
+        return reply.status(404).send({ error: 'Hábito não encontrado' });
+      }
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro interno do servidor' });
     }
   });
 

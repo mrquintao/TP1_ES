@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma.js';
 
 /**
  * Rotas CRUD para Trabalhos em Grupo
@@ -33,6 +31,11 @@ export async function trabalhosRoutes(app) {
   // POST / — Cria um novo trabalho (com membros opcionais)
   app.post('/', async (request, reply) => {
     const { titulo, disciplina, prazoEntrega, linksUteis, membros } = request.body;
+
+    if (!titulo || !prazoEntrega) {
+      return reply.status(400).send({ error: 'Campos obrigatórios: titulo, prazoEntrega' });
+    }
+
     const trabalho = await prisma.trabalhoGrupo.create({
       data: {
         titulo,
@@ -64,8 +67,12 @@ export async function trabalhosRoutes(app) {
         include: { membros: true },
       });
       return trabalho;
-    } catch {
-      return reply.status(404).send({ error: 'Trabalho não encontrado' });
+    } catch (err) {
+      if (err.code === 'P2025') {
+        return reply.status(404).send({ error: 'Trabalho não encontrado' });
+      }
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro interno do servidor' });
     }
   });
 
@@ -75,8 +82,12 @@ export async function trabalhosRoutes(app) {
     try {
       await prisma.trabalhoGrupo.delete({ where: { id: Number(id) } });
       return reply.status(204).send();
-    } catch {
-      return reply.status(404).send({ error: 'Trabalho não encontrado' });
+    } catch (err) {
+      if (err.code === 'P2025') {
+        return reply.status(404).send({ error: 'Trabalho não encontrado' });
+      }
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro interno do servidor' });
     }
   });
 }

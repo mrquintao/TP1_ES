@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma.js';
 
-const prisma = new PrismaClient();
 const UM_DIA = 24 * 60 * 60 * 1000;
 
 const chaveData = (data) => data.toISOString().slice(0, 10);
