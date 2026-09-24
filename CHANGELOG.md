@@ -13,6 +13,11 @@ Marquem com um `[x]` as tarefas e histórias de usuário que já foram implement
 - [x] **História 7:** Anexar links úteis e diretrizes dos professores aos trabalhos. *(Concluído: links exibidos nos cards, campo no formulário de criação e adicionar/remover em trabalhos existentes, via componente `LinksUteis`. Diretrizes do professor entram como links, ex.: PDF do enunciado)*
 - [x] **História 8:** Checklist de hábitos reseta automaticamente à meia-noite. *(Concluído: agendador com `node-cron` em `backend/src/jobs/resetHabitos.js`, roda às 00:00 no fuso America/Sao_Paulo; a rota `/api/habitos/reset` continua disponível para uso manual)*
 
+## ✨ Funcionalidades Extras (além das histórias originais)
+
+- [x] Edição completa de provas e trabalhos (título, disciplina, data/prazo, peso, alarme) — antes só era possível criar e excluir; trabalhos já tinham o status editável.
+- [x] Alarme opcional em provas e trabalhos + seção "Urgentes" na Home ("Meu Dia"): quando a data do alarme chega, o item aparece em destaque acima das listas normais, e continua aparecendo (marcado como atrasado) se o prazo passar sem o item ser concluído/editado.
+
 ## 🛠️ Infraestrutura, Base e Integração
 
 - [x] Repositório inicializado, `.gitignore` e `README.md` configurados.
