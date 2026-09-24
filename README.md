@@ -19,8 +19,8 @@ O StudySync é uma plataforma web integrada voltada para a organização da vida
 ## 🛠️ Tecnologias
 
 * **Frontend:** React + Tailwind CSS
-* **Backend:** Node.js (com Fastify/Express)
-* **Banco de Dados:** PostgreSQL (com ORM)
+* **Backend:** Node.js (com Fastify)
+* **Banco de Dados:** PostgreSQL (com Prisma ORM)
 * **Infraestrutura:** Docker e Docker Compose
 * **Agentes de IA/LLM:** Codex, Claude Code, ChatGPT (LLM), Gemini
 

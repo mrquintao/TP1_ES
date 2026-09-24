@@ -9,9 +9,9 @@ import { agendarResetHabitos } from './jobs/resetHabitos.js';
 // Cria a instância do Fastify com logs ativados
 const app = Fastify({ logger: true });
 
-// Registra o plugin de CORS (permite requisições do frontend)
+// Registra o plugin de CORS (restringe ao frontend configurado)
 await app.register(cors, {
-  origin: true, // aceita qualquer origem em dev
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
 });
 
 // Registra as rotas de cada entidade com prefixo /api
