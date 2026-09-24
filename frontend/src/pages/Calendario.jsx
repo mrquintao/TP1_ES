@@ -8,7 +8,9 @@ export default function Calendario() {
   const [mesAtual, setMesAtual] = useState(() => new Date());
   const [eventos, setEventos] = useState([]);
   const [selecionado, setSelecionado] = useState(null);
-  const [filtros, setFiltros] = useState({ prova: true, trabalho: true, habito: true });
+  // Hábitos começam desligados: como são diários, cada um aparece em quase todo
+  // dia do mês e enterra as provas/trabalhos no grid. Quem quiser vê-los liga o filtro.
+  const [filtros, setFiltros] = useState({ prova: true, trabalho: true, habito: false });
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(false);
   const dias = useMemo(() => diasDaGrade(mesAtual), [mesAtual]);
