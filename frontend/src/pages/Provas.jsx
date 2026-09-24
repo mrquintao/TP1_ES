@@ -11,6 +11,7 @@ export default function Provas() {
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editando, setEditando] = useState(null); // prova sendo editada, ou null
 
   // Busca todas as avaliações ao montar o componente
   const fetchAvaliacoes = async () => {
@@ -43,6 +44,29 @@ export default function Provas() {
     }
   };
 
+  // Salva as alterações de uma avaliação existente
+  const handleEditar = async (dados) => {
+    try {
+      await api.put(`/avaliacoes/${editando.id}`, dados);
+      setEditando(null);
+      fetchAvaliacoes();
+    } catch (err) {
+      console.error('Erro ao editar avaliação:', err);
+    }
+  };
+
+  // Alterna o formulário de criação, fechando uma edição em andamento
+  const abrirNovaProva = () => {
+    setEditando(null);
+    setShowForm((atual) => !atual);
+  };
+
+  // Abre a edição de uma prova, fechando o formulário de criação
+  const abrirEdicao = (av) => {
+    setShowForm(false);
+    setEditando(av);
+  };
+
   // Deleta uma avaliação
   const handleDelete = async (id) => {
     if (!confirm('Tem certeza que deseja excluir?')) return;
@@ -63,15 +87,16 @@ export default function Provas() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800">📝 Provas</h1>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={abrirNovaProva}
           className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition"
         >
           {showForm ? 'Cancelar' : '+ Nova Prova'}
         </button>
       </div>
 
-      {/* Formulário de criação */}
+      {/* Formulário de criação ou edição (nunca os dois ao mesmo tempo) */}
       {showForm && <FormProva onSalvar={handleCriar} />}
+      {editando && <FormProva inicial={editando} onSalvar={handleEditar} onCancelar={() => setEditando(null)} />}
 
       {/* Lista de avaliações */}
       {avaliacoes.length === 0 ? (
@@ -89,6 +114,9 @@ export default function Provas() {
                 <span className="bg-primary/10 text-primary font-bold px-3 py-1 rounded-full text-sm">
                   {diasRestantes(av.dataRealizacao)} dias
                 </span>
+                <button onClick={() => abrirEdicao(av)} className="text-gray-400 hover:text-primary text-sm">
+                  ✏️
+                </button>
                 <button onClick={() => handleDelete(av.id)} className="text-red-400 hover:text-red-600 text-sm">
                   🗑️
                 </button>
