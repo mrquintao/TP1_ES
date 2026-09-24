@@ -12,13 +12,17 @@ export default function GradeCalendario({ dias, eventos, mesReferencia, onSeleci
 
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="grid min-w-[700px] grid-cols-7">
+      {/* Cabeçalho com os dias da semana — some no celular, onde cada linha já mostra o seu dia */}
+      <div className="hidden border-b bg-gray-50 sm:grid sm:min-w-[700px] sm:grid-cols-7">
         {DIAS_SEMANA.map((dia) => (
-          <div key={dia} className="border-b bg-gray-50 py-3 text-center text-sm font-semibold text-gray-600">
+          <div key={dia} className="py-3 text-center text-sm font-semibold text-gray-600">
             {dia}
           </div>
         ))}
+      </div>
 
+      {/* Abaixo de sm (640px) vira uma lista de 1 coluna — a grade de 7 não cabe */}
+      <div className="grid grid-cols-1 sm:min-w-[700px] sm:grid-cols-7">
         {dias.map((dia) => {
           const data = chaveData(dia);
           const foraDoMes = mesReferencia != null && dia.getMonth() !== mesReferencia.getMonth();
@@ -29,7 +33,11 @@ export default function GradeCalendario({ dias, eventos, mesReferencia, onSeleci
               key={data}
               className={`min-h-28 border-b border-r p-2 ${foraDoMes ? 'bg-gray-50 text-gray-400' : ''}`}
             >
-              <span className="text-sm font-medium">{dia.getDate()}</span>
+              <span className="text-sm font-medium">
+                {/* Sem o cabeçalho no celular, o dia da semana vai junto da data */}
+                <span className="sm:hidden">{DIAS_SEMANA[dia.getDay()]}, </span>
+                {dia.getDate()}
+              </span>
               <div className="mt-1 space-y-1">
                 {eventosDoDia.map((evento) => (
                   <button
