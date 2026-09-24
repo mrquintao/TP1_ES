@@ -12,6 +12,7 @@ export default function Trabalhos() {
   const [trabalhos, setTrabalhos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editando, setEditando] = useState(null); // trabalho sendo editado, ou null
 
   const fetchTrabalhos = async () => {
     try {
@@ -40,6 +41,29 @@ export default function Trabalhos() {
     } catch (err) {
       console.error('Erro ao criar trabalho:', err);
     }
+  };
+
+  // Salva as alterações de um trabalho existente (título/disciplina/prazo/alarme)
+  const handleEditar = async (dados) => {
+    try {
+      const res = await api.put(`/trabalhos/${editando.id}`, dados);
+      setTrabalhos((atual) => atual.map((t) => (t.id === editando.id ? res.data : t)));
+      setEditando(null);
+    } catch (err) {
+      console.error('Erro ao editar trabalho:', err);
+    }
+  };
+
+  // Alterna o formulário de criação, fechando uma edição em andamento
+  const abrirNovoTrabalho = () => {
+    setEditando(null);
+    setShowForm((atual) => !atual);
+  };
+
+  // Abre a edição de um trabalho, fechando o formulário de criação
+  const abrirEdicao = (t) => {
+    setShowForm(false);
+    setEditando(t);
   };
 
   // Salva a nova lista de links de um trabalho (usado ao adicionar/remover um link)
@@ -86,13 +110,15 @@ export default function Trabalhos() {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800">👥 Trabalhos</h1>
-        <button onClick={() => setShowForm(!showForm)}
+        <button onClick={abrirNovoTrabalho}
           className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
           {showForm ? 'Cancelar' : '+ Novo Trabalho'}
         </button>
       </div>
 
+      {/* Formulário de criação ou edição (nunca os dois ao mesmo tempo) */}
       {showForm && <FormTrabalho onSalvar={handleCriar} />}
+      {editando && <FormTrabalho inicial={editando} onSalvar={handleEditar} onCancelar={() => setEditando(null)} />}
 
       {trabalhos.length === 0 ? (
         <p className="text-gray-400 text-center py-8">Nenhum trabalho cadastrado ainda.</p>
@@ -127,6 +153,7 @@ export default function Trabalhos() {
                   <span className="bg-primary/10 text-primary font-bold px-3 py-1 rounded-full text-sm">
                     {diasRestantes(t.prazoEntrega)}d
                   </span>
+                  <button onClick={() => abrirEdicao(t)} className="text-gray-400 hover:text-primary text-sm">✏️</button>
                   <button onClick={() => handleDelete(t.id)} className="text-red-400 hover:text-red-600 text-sm">🗑️</button>
                 </div>
               </div>
