@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import LinksUteis from '../components/LinksUteis';
 import { parseLinks } from '../utils/links';
+import { parseDataLocal } from '../utils/dates';
 
 /**
  * Página de Trabalhos em Grupo
@@ -33,7 +34,7 @@ export default function Trabalhos() {
   useEffect(() => { fetchTrabalhos(); }, []);
 
   const diasRestantes = (data) => {
-    const diff = new Date(data) - new Date();
+    const diff = parseDataLocal(data) - new Date();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   };
 
