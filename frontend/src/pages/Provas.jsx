@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { parseDataLocal } from '../utils/dates';
+import FormProva from '../components/FormProva';
 
 /**
  * Página de Provas/Avaliações
@@ -10,12 +11,6 @@ export default function Provas() {
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-
-  // Campos do formulário
-  const [disciplina, setDisciplina] = useState('');
-  const [descricao, setDescricao] = useState('');
-  const [peso, setPeso] = useState(1.0);
-  const [dataRealizacao, setDataRealizacao] = useState('');
 
   // Busca todas as avaliações ao montar o componente
   const fetchAvaliacoes = async () => {
@@ -38,11 +33,9 @@ export default function Provas() {
   };
 
   // Cria nova avaliação
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleCriar = async (dados) => {
     try {
-      await api.post('/avaliacoes', { disciplina, descricao, peso, dataRealizacao });
-      setDisciplina(''); setDescricao(''); setPeso(1.0); setDataRealizacao('');
+      await api.post('/avaliacoes', dados);
       setShowForm(false);
       fetchAvaliacoes(); // recarrega a lista
     } catch (err) {
@@ -78,36 +71,7 @@ export default function Provas() {
       </div>
 
       {/* Formulário de criação */}
-      {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Disciplina *</label>
-              <input type="text" required value={disciplina} onChange={(e) => setDisciplina(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data *</label>
-              <input type="date" required value={dataRealizacao} onChange={(e) => setDataRealizacao(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-            <input type="text" value={descricao} onChange={(e) => setDescricao(e.target.value)}
-              placeholder="Ex: Prova 1 - Matéria toda"
-              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none" />
-          </div>
-          <div className="w-32">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Peso</label>
-            <input type="number" step="0.1" min="0" value={peso} onChange={(e) => setPeso(parseFloat(e.target.value))}
-              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none" />
-          </div>
-          <button type="submit" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition">
-            Salvar
-          </button>
-        </form>
-      )}
+      {showForm && <FormProva onSalvar={handleCriar} />}
 
       {/* Lista de avaliações */}
       {avaliacoes.length === 0 ? (
