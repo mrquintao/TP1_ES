@@ -18,6 +18,7 @@ model Avaliacao {
   descricao  String?
   peso       Float    @default(1.0)
   dataRealizacao DateTime
+  dataAlarme DateTime? // opcional: a partir de quando a prova entra em "Urgentes" na Home
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -30,6 +31,7 @@ model TrabalhoGrupo {
   titulo       String
   disciplina   String?
   prazoEntrega DateTime
+  dataAlarme   DateTime? // opcional: a partir de quando o trabalho entra em "Urgentes" na Home
   linksUteis   String[] @default([])
   status       String   @default("pendente") // pendente, em_andamento, concluido
   createdAt    DateTime @default(now())
