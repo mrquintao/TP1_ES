@@ -13,6 +13,8 @@ export default function Home() {
   const [trabalhos, setTrabalhos] = useState([]);
   const [habitos, setHabitos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(null);
+  const [erroHabito, setErroHabito] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -24,8 +26,10 @@ export default function Home() {
         ]);
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
+        // Ordena por data antes de pegar as 5 mais próximas
         const proximasAvaliacoes = resAval.data
           .filter((av) => parseDataLocal(av.dataRealizacao) >= hoje)
+          .sort((a, b) => parseDataLocal(a.dataRealizacao) - parseDataLocal(b.dataRealizacao))
           .slice(0, 5);
         setAvaliacoes(proximasAvaliacoes);
         // "Urgentes" olha todas as avaliações/trabalhos (não só as 5 próximas),
@@ -35,6 +39,7 @@ export default function Home() {
         setHabitos(resHab.data);
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
+        setErro('Não foi possível carregar os dados. Verifique se o servidor está rodando.');
       } finally {
         setLoading(false);
       }
@@ -44,6 +49,7 @@ export default function Home() {
 
   // Marca/desmarca um hábito: salva na API e atualiza só esse item na lista
   const toggleConcluido = async (habito) => {
+    setErroHabito(null);
     try {
       const res = await api.put(`/habitos/${habito.id}`, {
         concluidoHoje: !habito.concluidoHoje,
@@ -51,6 +57,7 @@ export default function Home() {
       setHabitos((atual) => atual.map((h) => (h.id === habito.id ? res.data : h)));
     } catch (err) {
       console.error('Erro ao atualizar hábito:', err);
+      setErroHabito('Não foi possível atualizar o hábito. Tente novamente.');
     }
   };
 
@@ -64,6 +71,16 @@ export default function Home() {
     return (
       <div className="flex justify-center items-center h-64">
         <p className="text-gray-500 text-lg">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (erro) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          ⚠️ {erro}
+        </div>
       </div>
     );
   }
@@ -109,6 +126,11 @@ export default function Home() {
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
           ✅ Hábitos de Hoje
         </h2>
+        {erroHabito && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3 text-red-600 text-sm">
+            ⚠️ {erroHabito}
+          </div>
+        )}
         {habitos.length === 0 ? (
           <p className="text-gray-400">Nenhum hábito cadastrado.</p>
         ) : (

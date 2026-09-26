@@ -13,13 +13,17 @@ export default function Trabalhos() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null); // trabalho sendo editado, ou null
+  const [erro, setErro] = useState(null);
+  const [erroAcao, setErroAcao] = useState(null);
 
   const fetchTrabalhos = async () => {
     try {
       const res = await api.get('/trabalhos');
       setTrabalhos(res.data);
+      setErro(null);
     } catch (err) {
       console.error('Erro ao buscar trabalhos:', err);
+      setErro('Não foi possível carregar os trabalhos. Verifique se o servidor está rodando.');
     } finally {
       setLoading(false);
     }
@@ -34,35 +38,41 @@ export default function Trabalhos() {
 
   // Cria novo trabalho
   const handleCriar = async (dados) => {
+    setErroAcao(null);
     try {
       await api.post('/trabalhos', dados);
       setShowForm(false);
       fetchTrabalhos();
     } catch (err) {
       console.error('Erro ao criar trabalho:', err);
+      setErroAcao('Não foi possível criar o trabalho. Tente novamente.');
     }
   };
 
   // Salva as alterações de um trabalho existente (título/disciplina/prazo/alarme)
   const handleEditar = async (dados) => {
+    setErroAcao(null);
     try {
       const res = await api.put(`/trabalhos/${editando.id}`, dados);
       setTrabalhos((atual) => atual.map((t) => (t.id === editando.id ? res.data : t)));
       setEditando(null);
     } catch (err) {
       console.error('Erro ao editar trabalho:', err);
+      setErroAcao('Não foi possível salvar as alterações. Tente novamente.');
     }
   };
 
   // Alterna o formulário de criação, fechando uma edição em andamento
   const abrirNovoTrabalho = () => {
     setEditando(null);
+    setErroAcao(null);
     setShowForm((atual) => !atual);
   };
 
   // Abre a edição de um trabalho, fechando o formulário de criação
   const abrirEdicao = (t) => {
     setShowForm(false);
+    setErroAcao(null);
     setEditando(t);
   };
 
@@ -73,6 +83,7 @@ export default function Trabalhos() {
       fetchTrabalhos();
     } catch (err) {
       console.error('Erro ao atualizar links:', err);
+      setErroAcao('Não foi possível atualizar os links. Tente novamente.');
     }
   };
 
@@ -82,16 +93,19 @@ export default function Trabalhos() {
       setTrabalhos((atual) => atual.map((t) => (t.id === id ? res.data : t)));
     } catch (err) {
       console.error('Erro ao atualizar status:', err);
+      setErroAcao('Não foi possível atualizar o status. Tente novamente.');
     }
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Tem certeza que deseja excluir?')) return;
+    setErroAcao(null);
     try {
       await api.delete(`/trabalhos/${id}`);
       fetchTrabalhos();
     } catch (err) {
       console.error('Erro ao deletar:', err);
+      setErroAcao('Não foi possível excluir o trabalho. Tente novamente.');
     }
   };
 
@@ -106,6 +120,14 @@ export default function Trabalhos() {
     return <div className="flex justify-center p-8"><p className="text-gray-500">Carregando...</p></div>;
   }
 
+  if (erro) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">⚠️ {erro}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -115,6 +137,12 @@ export default function Trabalhos() {
           {showForm ? 'Cancelar' : '+ Novo Trabalho'}
         </button>
       </div>
+
+      {erroAcao && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">
+          ⚠️ {erroAcao}
+        </div>
+      )}
 
       {/* Formulário de criação ou edição (nunca os dois ao mesmo tempo) */}
       {showForm && <FormTrabalho onSalvar={handleCriar} />}

@@ -41,28 +41,40 @@ export async function calendarioRoutes(app) {
       return reply.status(400).send({ error: 'Intervalo de datas inválido' });
     }
 
-    const [avaliacoes, trabalhos, habitos] = await Promise.all([
-      prisma.avaliacao.findMany({ where: { dataRealizacao: { gte: inicio, lte: fim } } }),
-      prisma.trabalhoGrupo.findMany({ where: { prazoEntrega: { gte: inicio, lte: fim } } }),
-      prisma.habito.findMany({ where: { createdAt: { lte: fim } } }),
-    ]);
+    try {
+      const [avaliacoes, trabalhos, habitos] = await Promise.all([
+        prisma.avaliacao.findMany({ where: { dataRealizacao: { gte: inicio, lte: fim } } }),
+        prisma.trabalhoGrupo.findMany({ where: { prazoEntrega: { gte: inicio, lte: fim } } }),
+        prisma.habito.findMany({ where: { createdAt: { lte: fim } } }),
+      ]);
 
-    const eventos = [
-      ...avaliacoes.map((item) => ({
-        id: item.id,
-        titulo: item.descricao ? `${item.disciplina}: ${item.descricao}` : item.disciplina,
-        tipo: 'prova',
-        data: chaveData(item.dataRealizacao),
-      })),
-      ...trabalhos.map((item) => ({
-        id: item.id,
-        titulo: item.titulo,
-        tipo: 'trabalho',
-        data: chaveData(item.prazoEntrega),
-      })),
-      ...habitos.flatMap((item) => expandirHabito(item, inicio, fim)),
-    ];
+      const eventos = [
+        // Provas: inclui disciplina, descricao e peso para o modal de detalhes
+        ...avaliacoes.map((item) => ({
+          id: item.id,
+          titulo: item.descricao ? `${item.disciplina}: ${item.descricao}` : item.disciplina,
+          tipo: 'prova',
+          data: chaveData(item.dataRealizacao),
+          disciplina: item.disciplina,
+          descricao: item.descricao,
+          peso: item.peso,
+        })),
+        // Trabalhos: inclui disciplina e status para o modal de detalhes
+        ...trabalhos.map((item) => ({
+          id: item.id,
+          titulo: item.titulo,
+          tipo: 'trabalho',
+          data: chaveData(item.prazoEntrega),
+          disciplina: item.disciplina,
+          status: item.status,
+        })),
+        ...habitos.flatMap((item) => expandirHabito(item, inicio, fim)),
+      ];
 
-    return eventos.sort((a, b) => a.data.localeCompare(b.data));
+      return eventos.sort((a, b) => a.data.localeCompare(b.data));
+    } catch (err) {
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro interno do servidor' });
+    }
   });
 }

@@ -17,11 +17,16 @@ export async function resetarHabitosDiarios() {
  */
 export async function habitosRoutes(app) {
   // GET / — Lista todos os hábitos
-  app.get('/', async () => {
-    const habitos = await prisma.habito.findMany({
-      orderBy: { createdAt: 'asc' },
-    });
-    return habitos;
+  app.get('/', async (request, reply) => {
+    try {
+      const habitos = await prisma.habito.findMany({
+        orderBy: { createdAt: 'asc' },
+      });
+      return habitos;
+    } catch (err) {
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro interno do servidor' });
+    }
   });
 
   // POST / — Cria um novo hábito
@@ -32,23 +37,32 @@ export async function habitosRoutes(app) {
       return reply.status(400).send({ error: 'Campo obrigatório: descricao' });
     }
 
-    const habito = await prisma.habito.create({
-      data: {
-        descricao,
-        recorrencia: recorrencia || 'diario',
-      },
-    });
-    return reply.status(201).send(habito);
+    try {
+      const habito = await prisma.habito.create({
+        data: {
+          descricao,
+          recorrencia: recorrencia || 'diario',
+        },
+      });
+      return reply.status(201).send(habito);
+    } catch (err) {
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro interno do servidor' });
+    }
   });
 
-  // PUT /:id — Atualiza um hábito (ex: marcar como concluído)
+  // PUT /:id — Atualiza um hábito (ex: marcar como concluído, editar descrição)
   app.put('/:id', async (request, reply) => {
     const { id } = request.params;
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      return reply.status(400).send({ error: 'ID inválido' });
+    }
     const { descricao, recorrencia, concluidoHoje } = request.body;
 
     try {
       const habito = await prisma.habito.update({
-        where: { id: Number(id) },
+        where: { id: idNum },
         data: {
           ...(descricao && { descricao }),
           ...(recorrencia && { recorrencia }),
@@ -68,8 +82,12 @@ export async function habitosRoutes(app) {
   // DELETE /:id — Remove um hábito
   app.delete('/:id', async (request, reply) => {
     const { id } = request.params;
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      return reply.status(400).send({ error: 'ID inválido' });
+    }
     try {
-      await prisma.habito.delete({ where: { id: Number(id) } });
+      await prisma.habito.delete({ where: { id: idNum } });
       return reply.status(204).send();
     } catch (err) {
       if (err.code === 'P2025') {
@@ -82,8 +100,13 @@ export async function habitosRoutes(app) {
 
   // POST /reset — Reseta todos os hábitos diários manualmente
   // (o reset automático da meia-noite roda em src/jobs/resetHabitos.js)
-  app.post('/reset', async () => {
-    await resetarHabitosDiarios();
-    return { message: 'Hábitos diários resetados com sucesso' };
+  app.post('/reset', async (request, reply) => {
+    try {
+      await resetarHabitosDiarios();
+      return { message: 'Hábitos diários resetados com sucesso' };
+    } catch (err) {
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro interno do servidor' });
+    }
   });
 }

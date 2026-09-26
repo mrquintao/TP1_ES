@@ -12,14 +12,18 @@ export default function Provas() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null); // prova sendo editada, ou null
+  const [erro, setErro] = useState(null);
+  const [erroAcao, setErroAcao] = useState(null);
 
   // Busca todas as avaliações ao montar o componente
   const fetchAvaliacoes = async () => {
     try {
       const res = await api.get('/avaliacoes');
       setAvaliacoes(res.data);
+      setErro(null);
     } catch (err) {
       console.error('Erro ao buscar avaliações:', err);
+      setErro('Não foi possível carregar as avaliações. Verifique se o servidor está rodando.');
     } finally {
       setLoading(false);
     }
@@ -35,51 +39,67 @@ export default function Provas() {
 
   // Cria nova avaliação
   const handleCriar = async (dados) => {
+    setErroAcao(null);
     try {
       await api.post('/avaliacoes', dados);
       setShowForm(false);
       fetchAvaliacoes(); // recarrega a lista
     } catch (err) {
       console.error('Erro ao criar avaliação:', err);
+      setErroAcao('Não foi possível criar a avaliação. Tente novamente.');
     }
   };
 
   // Salva as alterações de uma avaliação existente
   const handleEditar = async (dados) => {
+    setErroAcao(null);
     try {
       await api.put(`/avaliacoes/${editando.id}`, dados);
       setEditando(null);
       fetchAvaliacoes();
     } catch (err) {
       console.error('Erro ao editar avaliação:', err);
+      setErroAcao('Não foi possível salvar as alterações. Tente novamente.');
     }
   };
 
   // Alterna o formulário de criação, fechando uma edição em andamento
   const abrirNovaProva = () => {
     setEditando(null);
+    setErroAcao(null);
     setShowForm((atual) => !atual);
   };
 
   // Abre a edição de uma prova, fechando o formulário de criação
   const abrirEdicao = (av) => {
     setShowForm(false);
+    setErroAcao(null);
     setEditando(av);
   };
 
   // Deleta uma avaliação
   const handleDelete = async (id) => {
     if (!confirm('Tem certeza que deseja excluir?')) return;
+    setErroAcao(null);
     try {
       await api.delete(`/avaliacoes/${id}`);
       fetchAvaliacoes();
     } catch (err) {
       console.error('Erro ao deletar:', err);
+      setErroAcao('Não foi possível excluir a avaliação. Tente novamente.');
     }
   };
 
   if (loading) {
     return <div className="flex justify-center p-8"><p className="text-gray-500">Carregando...</p></div>;
+  }
+
+  if (erro) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">⚠️ {erro}</div>
+      </div>
+    );
   }
 
   return (
@@ -93,6 +113,12 @@ export default function Provas() {
           {showForm ? 'Cancelar' : '+ Nova Prova'}
         </button>
       </div>
+
+      {erroAcao && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">
+          ⚠️ {erroAcao}
+        </div>
+      )}
 
       {/* Formulário de criação ou edição (nunca os dois ao mesmo tempo) */}
       {showForm && <FormProva onSalvar={handleCriar} />}

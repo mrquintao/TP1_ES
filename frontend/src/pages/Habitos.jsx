@@ -3,7 +3,7 @@ import api from '../services/api';
 
 /**
  * Página de Hábitos — checklist diário do estudante
- * Permite criar hábitos, marcar como concluído e resetar todos
+ * Permite criar hábitos, editar, marcar como concluído e resetar todos
  */
 export default function Habitos() {
   const [habitos, setHabitos] = useState([]);
@@ -11,13 +11,18 @@ export default function Habitos() {
   const [showForm, setShowForm] = useState(false);
   const [descricao, setDescricao] = useState('');
   const [recorrencia, setRecorrencia] = useState('diario');
+  const [editando, setEditando] = useState(null); // { id, descricao, recorrencia } | null
+  const [erro, setErro] = useState(null);
+  const [erroAcao, setErroAcao] = useState(null);
 
   const fetchHabitos = async () => {
     try {
       const res = await api.get('/habitos');
       setHabitos(res.data);
+      setErro(null);
     } catch (err) {
       console.error('Erro ao buscar hábitos:', err);
+      setErro('Não foi possível carregar os hábitos. Verifique se o servidor está rodando.');
     } finally {
       setLoading(false);
     }
@@ -27,6 +32,7 @@ export default function Habitos() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErroAcao(null);
     try {
       await api.post('/habitos', { descricao, recorrencia });
       setDescricao(''); setRecorrencia('diario');
@@ -34,11 +40,30 @@ export default function Habitos() {
       fetchHabitos();
     } catch (err) {
       console.error('Erro ao criar hábito:', err);
+      setErroAcao('Não foi possível criar o hábito. Tente novamente.');
+    }
+  };
+
+  // Salva as alterações de um hábito editado (descrição e/ou recorrência)
+  const handleSalvarEdicao = async (e) => {
+    e.preventDefault();
+    setErroAcao(null);
+    try {
+      const res = await api.put(`/habitos/${editando.id}`, {
+        descricao: editando.descricao,
+        recorrencia: editando.recorrencia,
+      });
+      setHabitos((atual) => atual.map((h) => (h.id === editando.id ? res.data : h)));
+      setEditando(null);
+    } catch (err) {
+      console.error('Erro ao editar hábito:', err);
+      setErroAcao('Não foi possível salvar as alterações. Tente novamente.');
     }
   };
 
   // Alterna o estado concluído do hábito
   const toggleConcluido = async (habito) => {
+    setErroAcao(null);
     try {
       await api.put(`/habitos/${habito.id}`, {
         concluidoHoje: !habito.concluidoHoje,
@@ -46,27 +71,32 @@ export default function Habitos() {
       fetchHabitos();
     } catch (err) {
       console.error('Erro ao atualizar hábito:', err);
+      setErroAcao('Não foi possível atualizar o hábito. Tente novamente.');
     }
   };
 
   // Reseta todos os hábitos diários
   const handleReset = async () => {
     if (!confirm('Resetar todos os hábitos diários?')) return;
+    setErroAcao(null);
     try {
       await api.post('/habitos/reset');
       fetchHabitos();
     } catch (err) {
       console.error('Erro ao resetar hábitos:', err);
+      setErroAcao('Não foi possível resetar os hábitos. Tente novamente.');
     }
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Excluir este hábito?')) return;
+    setErroAcao(null);
     try {
       await api.delete(`/habitos/${id}`);
       fetchHabitos();
     } catch (err) {
       console.error('Erro ao deletar:', err);
+      setErroAcao('Não foi possível excluir o hábito. Tente novamente.');
     }
   };
 
@@ -78,6 +108,14 @@ export default function Habitos() {
     return <div className="flex justify-center p-8"><p className="text-gray-500">Carregando...</p></div>;
   }
 
+  if (erro) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">⚠️ {erro}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -87,12 +125,18 @@ export default function Habitos() {
             className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition text-sm">
             🔄 Resetar Dia
           </button>
-          <button onClick={() => setShowForm(!showForm)}
+          <button onClick={() => { setShowForm(!showForm); setEditando(null); }}
             className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
             {showForm ? 'Cancelar' : '+ Novo Hábito'}
           </button>
         </div>
       </div>
+
+      {erroAcao && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">
+          ⚠️ {erroAcao}
+        </div>
+      )}
 
       {/* Barra de progresso */}
       {total > 0 && (
@@ -108,6 +152,7 @@ export default function Habitos() {
         </div>
       )}
 
+      {/* Formulário de criação */}
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-4">
           <div>
@@ -130,6 +175,31 @@ export default function Habitos() {
         </form>
       )}
 
+      {/* Formulário inline de edição de um hábito específico */}
+      {editando && (
+        <form onSubmit={handleSalvarEdicao} className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+          <p className="text-sm font-medium text-blue-700">Editando hábito</p>
+          <div className="flex gap-3 flex-wrap">
+            <input type="text" required value={editando.descricao}
+              onChange={(e) => setEditando((ed) => ({ ...ed, descricao: e.target.value }))}
+              className="flex-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none min-w-48" />
+            <select value={editando.recorrencia}
+              onChange={(e) => setEditando((ed) => ({ ...ed, recorrencia: e.target.value }))}
+              className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none">
+              <option value="diario">Diário</option>
+              <option value="semanal">Semanal</option>
+            </select>
+            <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
+              Salvar
+            </button>
+            <button type="button" onClick={() => setEditando(null)}
+              className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
+
       {habitos.length === 0 ? (
         <p className="text-gray-400 text-center py-8">Nenhum hábito cadastrado ainda.</p>
       ) : (
@@ -147,7 +217,11 @@ export default function Habitos() {
                 </span>
                 <span className="text-xs text-gray-400 ml-2">({h.recorrencia})</span>
               </label>
-              <button onClick={() => handleDelete(h.id)} className="text-red-400 hover:text-red-600 text-sm ml-2">🗑️</button>
+              <div className="flex gap-2 ml-2">
+                <button onClick={() => { setEditando({ id: h.id, descricao: h.descricao, recorrencia: h.recorrencia }); setShowForm(false); }}
+                  className="text-gray-400 hover:text-primary text-sm">✏️</button>
+                <button onClick={() => handleDelete(h.id)} className="text-red-400 hover:text-red-600 text-sm">🗑️</button>
+              </div>
             </div>
           ))}
         </div>
