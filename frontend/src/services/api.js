@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { obterToken, limparToken } from '../utils/authToken';
 
 /**
  * Instância do Axios configurada para o backend do StudySync
@@ -13,5 +14,26 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Anexa o token de login em toda requisição, quando houver um salvo
+api.interceptors.request.use((config) => {
+  const token = obterToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Um 401 significa sessão ausente/inválida/expirada: limpa o token e manda pro login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      limparToken();
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;
