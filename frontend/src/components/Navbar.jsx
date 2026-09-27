@@ -27,6 +27,7 @@ export default function Navbar() {
     { to: '/trabalhos', label: '👥 Trabalhos' },
     { to: '/habitos', label: '✅ Hábitos' },
     { to: '/calendario', label: '🗓️ Calendário' },
+    { to: '/configuracoes', label: '⚙️ Configurações' },
   ];
 
   const linkClass = (path) =>

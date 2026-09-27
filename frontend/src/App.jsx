@@ -9,6 +9,7 @@ import Habitos from './pages/Habitos';
 import Calendario from './pages/Calendario';
 import Login from './pages/Login';
 import Cadastro from './pages/Cadastro';
+import Configuracoes from './pages/Configuracoes';
 
 /**
  * App — Componente raiz do StudySync
@@ -45,6 +46,7 @@ function Layout() {
           <Route path="/trabalhos" element={<RotaProtegida><Trabalhos /></RotaProtegida>} />
           <Route path="/habitos" element={<RotaProtegida><Habitos /></RotaProtegida>} />
           <Route path="/calendario" element={<RotaProtegida><Calendario /></RotaProtegida>} />
+          <Route path="/configuracoes" element={<RotaProtegida><Configuracoes /></RotaProtegida>} />
         </Routes>
       </main>
     </div>

@@ -50,8 +50,14 @@ export function AuthProvider({ children }) {
     setUsuario(null);
   };
 
+  // Liga/desliga as notificações por e-mail do estudante logado
+  const atualizarPreferencias = async (preferencias) => {
+    const res = await api.put('/auth/preferencias', preferencias);
+    setUsuario(res.data.usuario);
+  };
+
   return (
-    <AuthContext.Provider value={{ usuario, carregando, login, cadastrar, logout }}>
+    <AuthContext.Provider value={{ usuario, carregando, login, cadastrar, logout, atualizarPreferencias }}>
       {children}
     </AuthContext.Provider>
   );
