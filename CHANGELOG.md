@@ -29,7 +29,7 @@ Marquem com um `[x]` as tarefas e histórias de usuário que já foram implement
 - [x] Frontend Scaffolded (React + Vite + Tailwind CSS).
 - [x] Integração API: Frontend consumindo o Backend via Axios (`services/api.js`).
 - [x] Roteamento de telas no Frontend (`react-router-dom`).
-- [ ] Sistema de Autenticação de Usuários (Login/Cadastro com JWT e vinculação de dados ao usuário).
+- [x] Sistema de Autenticação de Usuários (Login/Cadastro com JWT e vinculação de dados ao usuário). *(Concluído: modelo `Estudante` com senha em hash (bcrypt), `POST /api/auth/cadastro`, `POST /api/auth/login`, `GET /api/auth/me`; toda rota de dados exige token e filtra por `estudanteId` — um usuário nunca vê, edita ou apaga o que é de outro. Telas de Login e Cadastro, token guardado no `localStorage`, rotas do front protegidas via `RotaProtegida`)*
 
 ## 📐 Documentação de Engenharia de Software
 

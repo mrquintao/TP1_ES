@@ -41,7 +41,7 @@ O StudySync é uma plataforma web integrada voltada para a organização da vida
 
 ## 📐 Diagramas UML (Preliminar)
 
-Conforme os requisitos do projeto, abaixo estão dois diagramas arquiteturais iniciais para guiar o desenvolvimento.
+Conforme os requisitos do projeto, abaixo estão os diagramas arquiteturais do sistema.
 
 ### 1. Diagrama de Casos de Uso (Mermaid)
 
@@ -64,12 +64,15 @@ flowchart LR
 
 ### 2. Diagrama de Classes (Mermaid)
 
+`Estudante` deixou de ser ilustrativo: com a autenticação implementada, toda `Avaliacao`, `TrabalhoGrupo` e `Habito` tem um dono de verdade no banco, e cada estudante só vê/edita os próprios dados.
+
 ```mermaid
 classDiagram
     class Estudante {
         +String nome
         +String email
-        +String senha
+        +String senhaHash
+        +cadastrar()
         +login()
     }
 
@@ -103,6 +106,39 @@ classDiagram
     Estudante "1" -- "*" TrabalhoGrupo : gerencia >
     Estudante "1" -- "*" Habito : acompanha >
     TrabalhoGrupo "1" *-- "1..*" MembroGrupo : contem >
+```
+
+### 3. Diagrama de Sequência — Autenticação (Mermaid)
+
+Mostra o cadastro/login (que devolvem um token) e como esse token protege as rotas de dados a partir daí — o mesmo padrão vale para provas, trabalhos, hábitos e calendário.
+
+```mermaid
+sequenceDiagram
+    actor E as Estudante
+    participant F as Frontend (React)
+    participant A as API (Fastify)
+    participant B as PostgreSQL
+
+    E->>F: Preenche cadastro (nome, email, senha)
+    F->>A: POST /api/auth/cadastro
+    A->>A: Valida campos e gera hash da senha (bcrypt)
+    A->>B: Cria Estudante
+    A-->>F: token (JWT) + dados do usuario
+    F->>F: Guarda o token no localStorage
+    F-->>E: Entra logado, Home vazia
+
+    Note over E,B: Numa sessão futura — login com conta existente
+    E->>F: Preenche login (email, senha)
+    F->>A: POST /api/auth/login
+    A->>B: Busca Estudante pelo email
+    A->>A: Compara a senha com o hash salvo
+    A-->>F: token (JWT) + dados do usuario
+
+    Note over E,B: Toda requisição a dados (provas, trabalhos, hábitos, calendário)
+    F->>A: GET /api/avaliacoes  (Authorization: Bearer token)
+    A->>A: Verifica o token, extrai o id do estudante
+    A->>B: Busca só as avaliações desse estudanteId
+    A-->>F: Lista (nunca a de outro estudante)
 ```
 
 ---
