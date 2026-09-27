@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { registrarJwt } from './plugins/jwt.js';
+import { authRoutes } from './routes/auth.js';
 import { avaliacoesRoutes } from './routes/avaliacoes.js';
 import { trabalhosRoutes } from './routes/trabalhos.js';
 import { habitosRoutes } from './routes/habitos.js';
@@ -19,6 +20,9 @@ await app.register(cors, {
 // Registra o plugin de autenticação (JWT) — usado pelas rotas de auth e
 // pelo hook que protege as rotas de dados (src/hooks/autenticar.js)
 await registrarJwt(app);
+
+// Rotas de autenticação (públicas — cadastro e login não exigem token)
+await app.register(authRoutes, { prefix: '/api/auth' });
 
 // Registra as rotas de cada entidade com prefixo /api
 await app.register(avaliacoesRoutes, { prefix: '/api/avaliacoes' });
