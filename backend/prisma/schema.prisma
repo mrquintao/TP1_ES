@@ -22,6 +22,10 @@ model Avaliacao {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  // Dono da prova — cada usuário só vê/edita as próprias
+  estudanteId Int
+  estudante   Estudante @relation(fields: [estudanteId], references: [id], onDelete: Cascade)
+
   @@map("avaliacoes")
 }
 
@@ -39,6 +43,10 @@ model TrabalhoGrupo {
 
   // Relação com membros do grupo
   membros MembroGrupo[]
+
+  // Dono do trabalho — cada usuário só vê/edita os próprios
+  estudanteId Int
+  estudante   Estudante @relation(fields: [estudanteId], references: [id], onDelete: Cascade)
 
   @@map("trabalhos_grupo")
 }
@@ -65,5 +73,24 @@ model Habito {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Dono do hábito — cada usuário só vê/edita os próprios
+  estudanteId Int
+  estudante   Estudante @relation(fields: [estudanteId], references: [id], onDelete: Cascade)
+
   @@map("habitos")
+}
+
+// Conta de estudante: cadastro/login e dono de todos os seus dados
+model Estudante {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  createdAt DateTime @default(now())
+
+  avaliacoes Avaliacao[]
+  trabalhos  TrabalhoGrupo[]
+  habitos    Habito[]
+
+  @@map("estudantes")
 }
