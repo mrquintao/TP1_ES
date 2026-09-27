@@ -103,6 +103,9 @@ export async function trabalhosRoutes(app) {
           ...(prazoEntrega && { prazoEntrega: new Date(prazoEntrega) }),
           // dataAlarme !== undefined também cobre limpar o alarme (enviar null ou "")
           ...(dataAlarme !== undefined && { dataAlarme: dataAlarme ? new Date(dataAlarme) : null }),
+          // Mudou a data do alarme ou o prazo? O item pode voltar a ficar urgente
+          // mais pra frente — reseta pra poder notificar de novo
+          ...((prazoEntrega || dataAlarme !== undefined) && { notificadoUrgente: false }),
           ...(linksUteis && { linksUteis }),
           ...(status && { status }),
         },

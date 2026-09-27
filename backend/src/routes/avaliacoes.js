@@ -100,6 +100,9 @@ export async function avaliacoesRoutes(app) {
           ...(dataRealizacao && { dataRealizacao: new Date(dataRealizacao) }),
           // dataAlarme !== undefined também cobre limpar o alarme (enviar null ou "")
           ...(dataAlarme !== undefined && { dataAlarme: dataAlarme ? new Date(dataAlarme) : null }),
+          // Mudou a data do alarme ou a data-limite? O item pode voltar a ficar
+          // urgente mais pra frente — reseta pra poder notificar de novo
+          ...((dataRealizacao || dataAlarme !== undefined) && { notificadoUrgente: false }),
         },
       });
       if (count === 0) {
