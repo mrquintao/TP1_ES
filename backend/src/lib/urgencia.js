@@ -8,8 +8,10 @@
 const FUSO = 'America/Sao_Paulo';
 
 // Meia-noite UTC do dia de hoje em Brasília — mesmo formato que o Prisma grava
-// pras datas (new Date("2026-09-25") vira 2026-09-25T00:00:00.000Z)
-function hojeComoData() {
+// pras datas (new Date("2026-09-25") vira 2026-09-25T00:00:00.000Z).
+// Exportada porque o job de notificações também precisa de "hoje" correto
+// (pra janela de "próximos N dias"), não só estadoUrgencia.
+export function hojeComoData() {
   const partes = new Intl.DateTimeFormat('en-CA', {
     timeZone: FUSO,
     year: 'numeric', month: '2-digit', day: '2-digit',
