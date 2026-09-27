@@ -37,6 +37,9 @@ services:
       DATABASE_URL: postgresql://studysync:studysync123@db:5432/studysync
       PORT: 3000
       NODE_ENV: development
+      # Segredo de dev p/ assinar os tokens de login — trocar por um valor
+      # forte e privado antes de qualquer deploy real.
+      JWT_SECRET: studysync-dev-secret-troque-em-producao
     depends_on:
       db:
         condition: service_healthy
