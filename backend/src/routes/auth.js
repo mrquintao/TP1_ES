@@ -1,10 +1,22 @@
 import prisma from '../lib/prisma.js';
 import { hashSenha, compararSenha } from '../lib/senha.js';
+import { autenticar } from '../hooks/autenticar.js';
+
+// Formato público de um estudante — nunca inclui a senha/hash
+function paraUsuarioPublico(estudante) {
+  return {
+    id: estudante.id,
+    nome: estudante.nome,
+    email: estudante.email,
+    notificarDiario: estudante.notificarDiario,
+    notificarUrgente: estudante.notificarUrgente,
+  };
+}
 
 /**
- * Rotas de autenticação (cadastro, login, sessão atual).
- * Prefixo: /api/auth — públicas (não passam pelo hook src/hooks/autenticar.js),
- * exceto /me.
+ * Rotas de autenticação (cadastro, login, sessão atual, preferências).
+ * Prefixo: /api/auth — cadastro e login são públicos; /me e /preferencias
+ * exigem token (aplicado só nessas duas rotas, não no plugin inteiro).
  */
 export async function authRoutes(app) {
   // POST /cadastro — cria uma conta nova e já devolve o token de login
@@ -31,10 +43,7 @@ export async function authRoutes(app) {
       });
 
       const token = app.jwt.sign({ id: estudante.id });
-      return reply.status(201).send({
-        token,
-        usuario: { id: estudante.id, nome: estudante.nome, email: estudante.email },
-      });
+      return reply.status(201).send({ token, usuario: paraUsuarioPublico(estudante) });
     } catch (err) {
       app.log.error(err);
       return reply.status(500).send({ error: 'Erro interno do servidor' });
@@ -57,10 +66,7 @@ export async function authRoutes(app) {
       }
 
       const token = app.jwt.sign({ id: estudante.id });
-      return {
-        token,
-        usuario: { id: estudante.id, nome: estudante.nome, email: estudante.email },
-      };
+      return { token, usuario: paraUsuarioPublico(estudante) };
     } catch (err) {
       app.log.error(err);
       return reply.status(500).send({ error: 'Erro interno do servidor' });
@@ -68,17 +74,30 @@ export async function authRoutes(app) {
   });
 
   // GET /me — devolve o usuário do token atual (o front usa pra restaurar a sessão ao recarregar a página)
-  app.get('/me', async (request, reply) => {
-    try {
-      await request.jwtVerify();
-    } catch {
-      return reply.status(401).send({ error: 'Sessão inválida ou expirada' });
-    }
-
+  app.get('/me', { onRequest: autenticar }, async (request, reply) => {
     const estudante = await prisma.estudante.findUnique({ where: { id: request.user.id } });
     if (!estudante) {
       return reply.status(401).send({ error: 'Sessão inválida ou expirada' });
     }
-    return { usuario: { id: estudante.id, nome: estudante.nome, email: estudante.email } };
+    return { usuario: paraUsuarioPublico(estudante) };
+  });
+
+  // PUT /preferencias — liga/desliga as notificações por e-mail do estudante logado
+  app.put('/preferencias', { onRequest: autenticar }, async (request, reply) => {
+    const { notificarDiario, notificarUrgente } = request.body;
+
+    try {
+      const estudante = await prisma.estudante.update({
+        where: { id: request.user.id },
+        data: {
+          ...(notificarDiario !== undefined && { notificarDiario }),
+          ...(notificarUrgente !== undefined && { notificarUrgente }),
+        },
+      });
+      return { usuario: paraUsuarioPublico(estudante) };
+    } catch (err) {
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro interno do servidor' });
+    }
   });
 }
