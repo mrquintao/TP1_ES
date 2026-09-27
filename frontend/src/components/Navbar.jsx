@@ -1,13 +1,22 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Navbar — Barra de navegação principal do StudySync
- * Responsiva: menu hambúrguer em telas pequenas
+ * Responsiva: menu hambúrguer em telas pequenas. Mostra quem está logado + "Sair".
  */
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { usuario, logout } = useAuth();
   const [menuAberto, setMenuAberto] = useState(false);
+
+  const handleSair = () => {
+    logout();
+    setMenuAberto(false);
+    navigate('/login');
+  };
 
   // Verifica se o link está ativo para aplicar estilo diferente
   const isActive = (path) => location.pathname === path;
@@ -37,12 +46,19 @@ export default function Navbar() {
           </Link>
 
           {/* Links de navegação — desktop */}
-          <div className="hidden md:flex space-x-1">
+          <div className="hidden md:flex items-center space-x-1">
             {links.map((link) => (
               <Link key={link.to} to={link.to} className={linkClass(link.to)}>
                 {link.label}
               </Link>
             ))}
+            <span className="text-white/70 text-sm px-3">Olá, {usuario?.nome}</span>
+            <button
+              onClick={handleSair}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              Sair
+            </button>
           </div>
 
           {/* Botão hambúrguer — mobile */}
@@ -80,6 +96,12 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          <div className="border-t border-white/20 mt-2 pt-2">
+            <p className="text-white/70 text-sm px-4 py-1">Olá, {usuario?.nome}</p>
+            <button onClick={handleSair} className={`${linkClass('')} w-full text-left`}>
+              Sair
+            </button>
+          </div>
         </div>
       )}
     </nav>
