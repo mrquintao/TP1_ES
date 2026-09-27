@@ -1,19 +1,38 @@
 import { PrismaClient } from '@prisma/client';
+import { hashSenha } from '../src/lib/senha.js';
 
 const prisma = new PrismaClient();
+
+// Conta fixa de demonstração — os dados de exemplo abaixo pertencem só a ela.
+const DEMO_EMAIL = 'demo@studysync.com';
+const DEMO_SENHA = 'demo123';
 
 /**
  * Seed — popula o banco de dados com dados de exemplo para o StudySync.
  * Executar com: npm run db:seed
+ *
+ * Roda quantas vezes precisar sem risco: só cria/reaproveita a conta demo
+ * (upsert, nunca duplica) e só apaga/recria os dados DELA — nunca mexe em
+ * provas, trabalhos ou hábitos de outras contas.
  */
 async function main() {
   console.log('🌱 Iniciando seed do banco de dados...');
 
-  // Limpa as tabelas antes de inserir (ordem importa por causa das FKs)
-  await prisma.membroGrupo.deleteMany();
-  await prisma.trabalhoGrupo.deleteMany();
-  await prisma.avaliacao.deleteMany();
-  await prisma.habito.deleteMany();
+  const demo = await prisma.estudante.upsert({
+    where: { email: DEMO_EMAIL },
+    update: {},
+    create: {
+      nome: 'Conta Demo',
+      email: DEMO_EMAIL,
+      senhaHash: await hashSenha(DEMO_SENHA),
+    },
+  });
+
+  // Limpa só os dados da conta demo antes de recriar (ordem importa por causa das FKs)
+  await prisma.membroGrupo.deleteMany({ where: { trabalho: { estudanteId: demo.id } } });
+  await prisma.trabalhoGrupo.deleteMany({ where: { estudanteId: demo.id } });
+  await prisma.avaliacao.deleteMany({ where: { estudanteId: demo.id } });
+  await prisma.habito.deleteMany({ where: { estudanteId: demo.id } });
 
   // Avaliações de exemplo
   const hoje = new Date();
@@ -31,6 +50,7 @@ async function main() {
         peso: 2.0,
         dataRealizacao: daqui10,
         dataAlarme: alarme3,
+        estudanteId: demo.id,
       },
       {
         disciplina: 'Cálculo III',
@@ -38,6 +58,7 @@ async function main() {
         peso: 1.0,
         dataRealizacao: daqui20,
         dataAlarme: null,
+        estudanteId: demo.id,
       },
       {
         disciplina: 'Redes de Computadores',
@@ -45,6 +66,7 @@ async function main() {
         peso: 0.5,
         dataRealizacao: daqui5,
         dataAlarme: alarme3b,
+        estudanteId: demo.id,
       },
     ],
   });
@@ -62,6 +84,7 @@ async function main() {
       dataAlarme: alarmoT,
       status: 'em_andamento',
       linksUteis: ['https://github.com/mrquintao/TP1_ES'],
+      estudanteId: demo.id,
       membros: {
         create: [
           { nome: 'Guilherme', escopo: 'Backend + DevOps' },
@@ -80,6 +103,7 @@ async function main() {
       dataAlarme: null,
       status: 'pendente',
       linksUteis: [],
+      estudanteId: demo.id,
       membros: {
         create: [
           { nome: 'Guilherme' },
@@ -92,14 +116,15 @@ async function main() {
   // Hábitos de exemplo
   await prisma.habito.createMany({
     data: [
-      { descricao: 'Estudar 1h de Cálculo', recorrencia: 'diario' },
-      { descricao: 'Revisar anotações de Engenharia de Software', recorrencia: 'diario' },
-      { descricao: 'Fazer exercício físico', recorrencia: 'diario' },
-      { descricao: 'Revisão semanal do progresso', recorrencia: 'semanal' },
+      { descricao: 'Estudar 1h de Cálculo', recorrencia: 'diario', estudanteId: demo.id },
+      { descricao: 'Revisar anotações de Engenharia de Software', recorrencia: 'diario', estudanteId: demo.id },
+      { descricao: 'Fazer exercício físico', recorrencia: 'diario', estudanteId: demo.id },
+      { descricao: 'Revisão semanal do progresso', recorrencia: 'semanal', estudanteId: demo.id },
     ],
   });
 
   console.log('✅ Seed concluído com sucesso!');
+  console.log(`   Conta demo: ${DEMO_EMAIL} / senha: ${DEMO_SENHA}`);
 }
 
 main()
