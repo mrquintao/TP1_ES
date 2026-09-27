@@ -1,8 +1,11 @@
 import prisma from '../lib/prisma.js';
+import { autenticar } from '../hooks/autenticar.js';
 
 /**
- * Desmarca todos os hábitos diários (concluidoHoje = false).
- * Usada pela rota POST /reset e pelo agendador da meia-noite (src/jobs).
+ * Desmarca os hábitos diários de TODOS os estudantes (concluidoHoje = false).
+ * Usada só pelo agendador da meia-noite (src/jobs) — é global de propósito,
+ * roda sem request/usuário. A rota manual de reset (POST /reset, abaixo)
+ * é diferente: reseta só os hábitos de quem está logado.
  */
 export async function resetarHabitosDiarios() {
   await prisma.habito.updateMany({
@@ -13,13 +16,16 @@ export async function resetarHabitosDiarios() {
 
 /**
  * Rotas CRUD para Hábitos e tarefas recorrentes
- * Prefixo: /api/habitos
+ * Prefixo: /api/habitos — todas exigem login; cada estudante só vê/edita os próprios.
  */
 export async function habitosRoutes(app) {
-  // GET / — Lista todos os hábitos
+  app.addHook('onRequest', autenticar);
+
+  // GET / — Lista os hábitos do estudante logado
   app.get('/', async (request, reply) => {
     try {
       const habitos = await prisma.habito.findMany({
+        where: { estudanteId: request.user.id },
         orderBy: { createdAt: 'asc' },
       });
       return habitos;
@@ -42,6 +48,7 @@ export async function habitosRoutes(app) {
         data: {
           descricao,
           recorrencia: recorrencia || 'diario',
+          estudanteId: request.user.id, // dono vem sempre do token, nunca do corpo da requisição
         },
       });
       return reply.status(201).send(habito);
@@ -51,7 +58,7 @@ export async function habitosRoutes(app) {
     }
   });
 
-  // PUT /:id — Atualiza um hábito (ex: marcar como concluído, editar descrição)
+  // PUT /:id — Atualiza um hábito (ex: marcar como concluído, editar descrição) — só se for do estudante logado
   app.put('/:id', async (request, reply) => {
     const { id } = request.params;
     const idNum = Number(id);
@@ -61,25 +68,28 @@ export async function habitosRoutes(app) {
     const { descricao, recorrencia, concluidoHoje } = request.body;
 
     try {
-      const habito = await prisma.habito.update({
-        where: { id: idNum },
+      // updateMany com id + estudanteId no where: 0 linhas afetadas cobre
+      // tanto "não existe" quanto "existe mas é de outro estudante" — a
+      // resposta (404) é a mesma nos dois casos, não revela qual foi.
+      const { count } = await prisma.habito.updateMany({
+        where: { id: idNum, estudanteId: request.user.id },
         data: {
           ...(descricao && { descricao }),
           ...(recorrencia && { recorrencia }),
           ...(concluidoHoje !== undefined && { concluidoHoje }),
         },
       });
-      return habito;
-    } catch (err) {
-      if (err.code === 'P2025') {
+      if (count === 0) {
         return reply.status(404).send({ error: 'Hábito não encontrado' });
       }
+      return await prisma.habito.findUnique({ where: { id: idNum } });
+    } catch (err) {
       app.log.error(err);
       return reply.status(500).send({ error: 'Erro interno do servidor' });
     }
   });
 
-  // DELETE /:id — Remove um hábito
+  // DELETE /:id — Remove um hábito (só se for do estudante logado)
   app.delete('/:id', async (request, reply) => {
     const { id } = request.params;
     const idNum = Number(id);
@@ -87,22 +97,27 @@ export async function habitosRoutes(app) {
       return reply.status(400).send({ error: 'ID inválido' });
     }
     try {
-      await prisma.habito.delete({ where: { id: idNum } });
-      return reply.status(204).send();
-    } catch (err) {
-      if (err.code === 'P2025') {
+      const { count } = await prisma.habito.deleteMany({
+        where: { id: idNum, estudanteId: request.user.id },
+      });
+      if (count === 0) {
         return reply.status(404).send({ error: 'Hábito não encontrado' });
       }
+      return reply.status(204).send();
+    } catch (err) {
       app.log.error(err);
       return reply.status(500).send({ error: 'Erro interno do servidor' });
     }
   });
 
-  // POST /reset — Reseta todos os hábitos diários manualmente
-  // (o reset automático da meia-noite roda em src/jobs/resetHabitos.js)
+  // POST /reset — Reseta manualmente só os hábitos diários do estudante logado
+  // (o reset automático da meia-noite, global, roda em src/jobs/resetHabitos.js)
   app.post('/reset', async (request, reply) => {
     try {
-      await resetarHabitosDiarios();
+      await prisma.habito.updateMany({
+        where: { recorrencia: 'diario', estudanteId: request.user.id },
+        data: { concluidoHoje: false },
+      });
       return { message: 'Hábitos diários resetados com sucesso' };
     } catch (err) {
       app.log.error(err);

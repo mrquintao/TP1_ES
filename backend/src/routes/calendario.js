@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma.js';
+import { autenticar } from '../hooks/autenticar.js';
 
 const UM_DIA = 24 * 60 * 60 * 1000;
 
@@ -28,6 +29,9 @@ function expandirHabito(habito, inicio, fim) {
 }
 
 export async function calendarioRoutes(app) {
+  app.addHook('onRequest', autenticar);
+
+  // Agrega provas + trabalhos + hábitos do estudante logado num intervalo de datas
   app.get('/', async (request, reply) => {
     const hoje = new Date();
     const inicioPadrao = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth(), 1));
@@ -42,10 +46,11 @@ export async function calendarioRoutes(app) {
     }
 
     try {
+      const dono = { estudanteId: request.user.id };
       const [avaliacoes, trabalhos, habitos] = await Promise.all([
-        prisma.avaliacao.findMany({ where: { dataRealizacao: { gte: inicio, lte: fim } } }),
-        prisma.trabalhoGrupo.findMany({ where: { prazoEntrega: { gte: inicio, lte: fim } } }),
-        prisma.habito.findMany({ where: { createdAt: { lte: fim } } }),
+        prisma.avaliacao.findMany({ where: { ...dono, dataRealizacao: { gte: inicio, lte: fim } } }),
+        prisma.trabalhoGrupo.findMany({ where: { ...dono, prazoEntrega: { gte: inicio, lte: fim } } }),
+        prisma.habito.findMany({ where: { ...dono, createdAt: { lte: fim } } }),
       ]);
 
       const eventos = [
