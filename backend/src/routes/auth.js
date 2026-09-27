@@ -1,7 +1,5 @@
-import bcrypt from 'bcryptjs';
 import prisma from '../lib/prisma.js';
-
-const SALT_ROUNDS = 10;
+import { hashSenha, compararSenha } from '../lib/senha.js';
 
 /**
  * Rotas de autenticação (cadastro, login, sessão atual).
@@ -27,7 +25,7 @@ export async function authRoutes(app) {
       }
 
       // Nunca guardamos a senha em texto puro — só o hash
-      const senhaHash = await bcrypt.hash(senha, SALT_ROUNDS);
+      const senhaHash = await hashSenha(senha);
       const estudante = await prisma.estudante.create({
         data: { nome, email, senhaHash },
       });
@@ -54,7 +52,7 @@ export async function authRoutes(app) {
     try {
       const estudante = await prisma.estudante.findUnique({ where: { email } });
       // Mensagem sempre genérica: não revela se o e-mail existe ou se foi a senha que errou
-      if (!estudante || !(await bcrypt.compare(senha, estudante.senhaHash))) {
+      if (!estudante || !(await compararSenha(senha, estudante.senhaHash))) {
         return reply.status(401).send({ error: 'E-mail ou senha inválidos' });
       }
 
