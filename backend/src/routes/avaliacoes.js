@@ -1,14 +1,18 @@
 import prisma from '../lib/prisma.js';
+import { autenticar } from '../hooks/autenticar.js';
 
 /**
  * Rotas CRUD para Avaliações (provas, testes, etc.)
- * Prefixo: /api/avaliacoes
+ * Prefixo: /api/avaliacoes — todas exigem login; cada estudante só vê/edita as próprias.
  */
 export async function avaliacoesRoutes(app) {
-  // GET / — Lista todas as avaliações (ordenadas por data)
+  app.addHook('onRequest', autenticar);
+
+  // GET / — Lista as avaliações do estudante logado (ordenadas por data)
   app.get('/', async (request, reply) => {
     try {
       const avaliacoes = await prisma.avaliacao.findMany({
+        where: { estudanteId: request.user.id },
         orderBy: { dataRealizacao: 'asc' },
       });
       return avaliacoes;
@@ -18,7 +22,7 @@ export async function avaliacoesRoutes(app) {
     }
   });
 
-  // GET /:id — Busca uma avaliação por ID
+  // GET /:id — Busca uma avaliação por ID (só se for do estudante logado)
   app.get('/:id', async (request, reply) => {
     const { id } = request.params;
     const idNum = Number(id);
@@ -26,8 +30,9 @@ export async function avaliacoesRoutes(app) {
       return reply.status(400).send({ error: 'ID inválido' });
     }
     try {
-      const avaliacao = await prisma.avaliacao.findUnique({
-        where: { id: idNum },
+      // findFirst (não findUnique) porque o filtro combina id + estudanteId
+      const avaliacao = await prisma.avaliacao.findFirst({
+        where: { id: idNum, estudanteId: request.user.id },
       });
       if (!avaliacao) {
         return reply.status(404).send({ error: 'Avaliação não encontrada' });
@@ -63,6 +68,7 @@ export async function avaliacoesRoutes(app) {
           peso: peso ?? 1.0,
           dataRealizacao: dataRealDate,
           dataAlarme: dataAlarmeDate,
+          estudanteId: request.user.id, // dono vem sempre do token, nunca do corpo da requisição
         },
       });
       return reply.status(201).send(avaliacao);
@@ -72,7 +78,7 @@ export async function avaliacoesRoutes(app) {
     }
   });
 
-  // PUT /:id — Atualiza uma avaliação existente
+  // PUT /:id — Atualiza uma avaliação existente (só se for do estudante logado)
   app.put('/:id', async (request, reply) => {
     const { id } = request.params;
     const idNum = Number(id);
@@ -82,8 +88,11 @@ export async function avaliacoesRoutes(app) {
     const { disciplina, descricao, peso, dataRealizacao, dataAlarme } = request.body;
 
     try {
-      const avaliacao = await prisma.avaliacao.update({
-        where: { id: idNum },
+      // updateMany com id + estudanteId no where: 0 linhas afetadas cobre
+      // tanto "não existe" quanto "existe mas é de outro estudante" — a
+      // resposta (404) é a mesma nos dois casos, não revela qual foi.
+      const { count } = await prisma.avaliacao.updateMany({
+        where: { id: idNum, estudanteId: request.user.id },
         data: {
           ...(disciplina && { disciplina }),
           ...(descricao !== undefined && { descricao }),
@@ -93,17 +102,17 @@ export async function avaliacoesRoutes(app) {
           ...(dataAlarme !== undefined && { dataAlarme: dataAlarme ? new Date(dataAlarme) : null }),
         },
       });
-      return avaliacao;
-    } catch (err) {
-      if (err.code === 'P2025') {
+      if (count === 0) {
         return reply.status(404).send({ error: 'Avaliação não encontrada' });
       }
+      return await prisma.avaliacao.findUnique({ where: { id: idNum } });
+    } catch (err) {
       app.log.error(err);
       return reply.status(500).send({ error: 'Erro interno do servidor' });
     }
   });
 
-  // DELETE /:id — Remove uma avaliação
+  // DELETE /:id — Remove uma avaliação (só se for do estudante logado)
   app.delete('/:id', async (request, reply) => {
     const { id } = request.params;
     const idNum = Number(id);
@@ -111,12 +120,14 @@ export async function avaliacoesRoutes(app) {
       return reply.status(400).send({ error: 'ID inválido' });
     }
     try {
-      await prisma.avaliacao.delete({ where: { id: idNum } });
-      return reply.status(204).send();
-    } catch (err) {
-      if (err.code === 'P2025') {
+      const { count } = await prisma.avaliacao.deleteMany({
+        where: { id: idNum, estudanteId: request.user.id },
+      });
+      if (count === 0) {
         return reply.status(404).send({ error: 'Avaliação não encontrada' });
       }
+      return reply.status(204).send();
+    } catch (err) {
       app.log.error(err);
       return reply.status(500).send({ error: 'Erro interno do servidor' });
     }
