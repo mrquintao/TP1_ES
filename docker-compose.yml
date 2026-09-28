@@ -40,6 +40,11 @@ services:
       # Segredo de dev p/ assinar os tokens de login — trocar por um valor
       # forte e privado antes de qualquer deploy real.
       JWT_SECRET: studysync-dev-secret-troque-em-producao
+      # Opcionais: sem elas, o job de notificações roda normal só sem enviar
+      # e-mail de verdade (fallback já testado). Vêm de um `.env` na raiz
+      # (não versionado) — ver `.env.example`.
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      SENDGRID_FROM: ${SENDGRID_FROM:-}
     depends_on:
       db:
         condition: service_healthy
