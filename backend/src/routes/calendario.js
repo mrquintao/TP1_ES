@@ -2,6 +2,7 @@ import prisma from '../lib/prisma.js';
 import { autenticar } from '../hooks/autenticar.js';
 
 const UM_DIA = 24 * 60 * 60 * 1000;
+const MAX_DIAS_INTERVALO = 400;
 
 const chaveData = (data) => data.toISOString().slice(0, 10);
 
@@ -43,6 +44,11 @@ export async function calendarioRoutes(app) {
 
     if (Number.isNaN(inicio.getTime()) || Number.isNaN(fim.getTime()) || inicio > fim) {
       return reply.status(400).send({ error: 'Intervalo de datas inválido' });
+    }
+    // Limita o intervalo: hábitos são expandidos dia a dia, então um intervalo
+    // enorme gastaria memória à toa (o front pede no máximo ~6 semanas)
+    if ((fim - inicio) / UM_DIA > MAX_DIAS_INTERVALO) {
+      return reply.status(400).send({ error: `Intervalo máximo: ${MAX_DIAS_INTERVALO} dias` });
     }
 
     try {
