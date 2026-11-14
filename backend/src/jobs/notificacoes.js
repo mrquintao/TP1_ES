@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import prisma from '../lib/prisma.js';
 import { enviarEmail } from '../lib/email.js';
 import { estadoUrgencia, hojeComoData } from '../lib/urgencia.js';
+import { escaparHtml } from '../lib/html.js';
 
 const HORARIO_NOTIFICACAO = '0 8 * * *';
 const FUSO_HORARIO = 'America/Sao_Paulo';
@@ -13,12 +14,12 @@ function secaoLembrete(avaliacoes, trabalhos) {
   let html = `<h3>📅 Prazos dos próximos ${DIAS_LEMBRETE} dias</h3>`;
   if (avaliacoes.length > 0) {
     html += '<p><strong>📝 Provas:</strong></p><ul>';
-    avaliacoes.forEach((a) => { html += `<li>${a.disciplina}: ${a.dataRealizacao.toLocaleDateString('pt-BR')}</li>`; });
+    avaliacoes.forEach((a) => { html += `<li>${escaparHtml(a.disciplina)}: ${a.dataRealizacao.toLocaleDateString('pt-BR')}</li>`; });
     html += '</ul>';
   }
   if (trabalhos.length > 0) {
     html += '<p><strong>👥 Trabalhos:</strong></p><ul>';
-    trabalhos.forEach((t) => { html += `<li>${t.titulo}: ${t.prazoEntrega.toLocaleDateString('pt-BR')}</li>`; });
+    trabalhos.forEach((t) => { html += `<li>${escaparHtml(t.titulo)}: ${t.prazoEntrega.toLocaleDateString('pt-BR')}</li>`; });
     html += '</ul>';
   }
   return html;
@@ -28,7 +29,7 @@ function secaoLembrete(avaliacoes, trabalhos) {
 function secaoUrgentes(itens) {
   if (itens.length === 0) return '';
   let html = '<h3>🚨 Ficaram urgentes</h3><ul>';
-  itens.forEach((item) => { html += `<li>${item.titulo} (${item.estado})</li>`; });
+  itens.forEach((item) => { html += `<li>${escaparHtml(item.titulo)} (${item.estado})</li>`; });
   html += '</ul>';
   return html;
 }
@@ -48,11 +49,11 @@ async function buscarUrgentesNovos(estudanteId) {
   const itens = [];
   for (const a of avaliacoes) {
     const estado = estadoUrgencia({ dataAlarme: a.dataAlarme, dataLimite: a.dataRealizacao });
-    if (estado) itens.push({ tipo: 'avaliacao', id: a.id, titulo: `📝 ${a.disciplina}`, estado });
+    if (estado) itens.push({ tipo: 'avaliacao', id: a.id, titulo: `📝 ${escaparHtml(a.disciplina)}`, estado });
   }
   for (const t of trabalhos) {
     const estado = estadoUrgencia({ dataAlarme: t.dataAlarme, dataLimite: t.prazoEntrega });
-    if (estado) itens.push({ tipo: 'trabalho', id: t.id, titulo: `👥 ${t.titulo}`, estado });
+    if (estado) itens.push({ tipo: 'trabalho', id: t.id, titulo: `👥 ${escaparHtml(t.titulo)}`, estado });
   }
   return itens;
 }
@@ -94,7 +95,7 @@ async function processarEstudante(estudante, log) {
 
   if (!htmlLembrete && !htmlUrgentes) return false; // nada a avisar hoje
 
-  const html = `<h2>StudySync</h2><p>Olá, ${estudante.nome}!</p>${htmlLembrete}${htmlUrgentes}`;
+  const html = `<h2>StudySync</h2><p>Olá, ${escaparHtml(estudante.nome)}!</p>${htmlLembrete}${htmlUrgentes}`;
   const resultado = await enviarEmail({ to: estudante.email, subject: 'StudySync — seus lembretes de hoje', html });
 
   if (resultado.enviado) {

@@ -5,6 +5,7 @@ import { temBanco, criarApp, cadastrar, comToken } from './helpers.js';
 // Troca o envio de e-mail por um que falha pro primeiro destinatário (como o
 // SendGrid recusando um endereço) e registra todas as tentativas.
 const tentativas = [];
+const htmls = {}; // html enviado, por destinatário
 mock.module('../src/lib/email.js', {
   exports: {
     enviarEmail: async ({ to }) => {
