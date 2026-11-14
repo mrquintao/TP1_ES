@@ -9,8 +9,9 @@ process.env.JWT_SECRET ||= 'segredo-de-teste';
 // Todo e-mail criado nesta execução começa com este prefixo, pra limpar só o que é nosso
 const PREFIXO = `it-${process.pid}-`; // por processo: arquivos de teste rodam em paralelo
 
-export async function criarApp() {
-  const app = await buildApp({ logger: false });
+export async function criarApp(opcoes = {}) {
+  // limiteAuth alto: os testes fazem dezenas de cadastros/logins do mesmo IP
+  const app = await buildApp({ logger: false, limiteAuth: 100000, ...opcoes });
   after(async () => {
     await prisma.estudante.deleteMany({ where: { email: { startsWith: PREFIXO } } });
     await app.close();
