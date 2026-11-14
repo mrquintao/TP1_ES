@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import { registrarJwt } from './plugins/jwt.js';
 import { authRoutes } from './routes/auth.js';
 import { avaliacoesRoutes } from './routes/avaliacoes.js';
@@ -11,8 +12,16 @@ import { calendarioRoutes } from './routes/calendario.js';
  * Monta a instância do Fastify (plugins + rotas) sem abrir porta nem agendar
  * jobs — assim o servidor real (server.js) e os testes usam o mesmo app.
  */
-export async function buildApp({ logger = true } = {}) {
+export async function buildApp({
+  logger = true,
+  // Máximo de tentativas de login/cadastro por minuto, por IP (freia força bruta)
+  limiteAuth = Number(process.env.RATE_LIMIT_AUTH_MAX) || 20,
+} = {}) {
   const app = Fastify({ logger });
+  app.decorate('limiteAuth', limiteAuth);
+
+  // global: false — o limite só vale nas rotas que o pedem (login e cadastro)
+  await app.register(rateLimit, { global: false });
 
   // Restringe o CORS ao frontend configurado
   await app.register(cors, {
