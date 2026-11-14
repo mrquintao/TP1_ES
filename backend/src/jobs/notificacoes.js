@@ -116,12 +116,22 @@ export async function executarNotificacoesDiarias(log) {
   });
   log.info(`Verificando notificações para ${estudantes.length} estudante(s)...`);
   for (const estudante of estudantes) {
-    await processarEstudante(estudante, log);
+    // Um erro com um estudante (ex.: SendGrid recusou o envio) não pode
+    // impedir que os outros recebam o aviso nem derrubar o job
+    try {
+      await processarEstudante(estudante, log);
+    } catch (err) {
+      log.error(err, `Falha ao notificar ${estudante.email}`);
+    }
   }
 }
 
 // Agenda o ciclo de notificações pra rodar todo dia às 08:00 (horário de Brasília)
 export function agendarNotificacoes(log) {
-  cron.schedule(HORARIO_NOTIFICACAO, () => executarNotificacoesDiarias(log), { timezone: FUSO_HORARIO });
+  cron.schedule(
+    HORARIO_NOTIFICACAO,
+    () => executarNotificacoesDiarias(log).catch((err) => log.error(err, 'Falha no job de notificações')),
+    { timezone: FUSO_HORARIO }
+  );
   log.info(`Notificações agendadas (${HORARIO_NOTIFICACAO}, ${FUSO_HORARIO})`);
 }
