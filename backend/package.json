@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "npx prisma db push && node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "node --test \"test/*.test.js\"",
+    "test": "node --experimental-test-module-mocks --test \"test/*.test.js\"",
     "db:migrate": "npx prisma migrate dev",
     "db:seed": "node prisma/seed.js",
     "db:studio": "npx prisma studio"
