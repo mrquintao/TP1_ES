@@ -41,3 +41,12 @@ export function estadoUrgencia({ dataAlarme, dataLimite, concluido = false }) {
   if (hoje < alarme) return null;
   return hoje > limite ? 'atrasado' : 'urgente';
 }
+
+// Dia (aaaa-mm-dd) de um instante no fuso de Brasília. Um hábito criado às
+// 22h de Brasília já é "amanhã" em UTC; pro estudante, o dia é o de Brasília.
+export function chaveDataBrasilia(data) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: FUSO,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(data);
+}
