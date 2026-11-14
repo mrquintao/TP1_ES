@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma.js';
 import { autenticar } from '../hooks/autenticar.js';
+import { chaveDataBrasilia } from '../lib/urgencia.js';
 
 const UM_DIA = 24 * 60 * 60 * 1000;
 const MAX_DIAS_INTERVALO = 400;
@@ -8,7 +9,8 @@ const chaveData = (data) => data.toISOString().slice(0, 10);
 
 function expandirHabito(habito, inicio, fim) {
   const eventos = [];
-  const criadoEm = new Date(`${chaveData(habito.createdAt)}T00:00:00Z`);
+  // dia de criação no fuso de Brasília (não em UTC), igual ao resto do sistema
+  const criadoEm = new Date(`${chaveDataBrasilia(habito.createdAt)}T00:00:00Z`);
   const cursor = new Date(Math.max(criadoEm.getTime(), inicio.getTime()));
 
   if (habito.recorrencia === 'semanal') {

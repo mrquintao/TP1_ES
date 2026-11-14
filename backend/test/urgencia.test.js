@@ -1,6 +1,6 @@
 import { test, describe, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { estadoUrgencia, hojeComoData } from '../src/lib/urgencia.js';
+import { estadoUrgencia, hojeComoData, chaveDataBrasilia } from '../src/lib/urgencia.js';
 
 // Congela o relógio: "agora" passa a ser o instante informado (UTC)
 function fixarAgora(iso) {
@@ -73,5 +73,19 @@ describe('estadoUrgencia', () => {
       dataLimite: new Date('2026-09-25T23:59:59Z'),
     });
     assert.equal(r, 'urgente');
+  });
+});
+
+describe('chaveDataBrasilia', () => {
+  test('usa o dia de Brasília: 01:30 UTC ainda é o dia anterior', () => {
+    assert.equal(chaveDataBrasilia(new Date('2026-09-25T01:30:00Z')), '2026-09-24');
+  });
+
+  test('no meio do dia coincide com a data UTC', () => {
+    assert.equal(chaveDataBrasilia(new Date('2026-09-25T15:00:00Z')), '2026-09-25');
+  });
+
+  test('03:00 UTC já é meia-noite do dia seguinte em Brasília', () => {
+    assert.equal(chaveDataBrasilia(new Date('2026-09-25T03:00:00Z')), '2026-09-25');
   });
 });
