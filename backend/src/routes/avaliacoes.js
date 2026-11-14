@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma.js';
 import { autenticar } from '../hooks/autenticar.js';
+import { validarAvaliacao } from '../lib/validacao.js';
 
 /**
  * Rotas CRUD para Avaliações (provas, testes, etc.)
@@ -51,6 +52,10 @@ export async function avaliacoesRoutes(app) {
     if (!disciplina || !dataRealizacao) {
       return reply.status(400).send({ error: 'Campos obrigatórios: disciplina, dataRealizacao' });
     }
+    const erroCampos = validarAvaliacao({ disciplina, descricao, peso });
+    if (erroCampos) {
+      return reply.status(400).send({ error: erroCampos });
+    }
     const dataRealDate = new Date(dataRealizacao);
     if (isNaN(dataRealDate.getTime())) {
       return reply.status(400).send({ error: 'dataRealizacao inválida' });
@@ -87,6 +92,11 @@ export async function avaliacoesRoutes(app) {
     }
     const { disciplina, descricao, peso, dataRealizacao, dataAlarme } = request.body;
 
+    const erroCampos = validarAvaliacao({ disciplina, descricao, peso });
+    if (erroCampos) {
+      return reply.status(400).send({ error: erroCampos });
+    }
+
     // Mesma validação do POST: data inválida vira 400, não erro 500 do Prisma
     if (dataRealizacao && isNaN(new Date(dataRealizacao).getTime())) {
       return reply.status(400).send({ error: 'dataRealizacao inválida' });
@@ -102,9 +112,12 @@ export async function avaliacoesRoutes(app) {
       const { count } = await prisma.avaliacao.updateMany({
         where: { id: idNum, estudanteId: request.user.id },
         data: {
+        // updatedAt sempre muda: com um PUT sem nenhum campo novo o data ficaria
+        // vazio e o Prisma contaria 0 linhas, devolvendo 404 pra um item que existe
+        updatedAt: new Date(),
           ...(disciplina && { disciplina }),
           ...(descricao !== undefined && { descricao }),
-          ...(peso !== undefined && { peso }),
+          ...(peso != null && { peso }),
           ...(dataRealizacao && { dataRealizacao: new Date(dataRealizacao) }),
           // dataAlarme !== undefined também cobre limpar o alarme (enviar null ou "")
           ...(dataAlarme !== undefined && { dataAlarme: dataAlarme ? new Date(dataAlarme) : null }),

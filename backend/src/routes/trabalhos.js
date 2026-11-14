@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma.js';
 import { autenticar } from '../hooks/autenticar.js';
+import { validarTrabalho } from '../lib/validacao.js';
 
 /**
  * Rotas CRUD para Trabalhos em Grupo
@@ -53,6 +54,10 @@ export async function trabalhosRoutes(app) {
     if (!titulo || !prazoEntrega) {
       return reply.status(400).send({ error: 'Campos obrigatórios: titulo, prazoEntrega' });
     }
+    const erroCampos = validarTrabalho({ titulo, disciplina, linksUteis, membros });
+    if (erroCampos) {
+      return reply.status(400).send({ error: erroCampos });
+    }
     const prazoDate = new Date(prazoEntrega);
     if (isNaN(prazoDate.getTime())) {
       return reply.status(400).send({ error: 'prazoEntrega inválido' });
@@ -70,7 +75,8 @@ export async function trabalhosRoutes(app) {
           prazoEntrega: prazoDate,
           dataAlarme: dataAlarmeDate,
           linksUteis: linksUteis || [],
-          membros: membros ? { create: membros } : undefined,
+          // só nome e escopo: o resto do que vier no corpo não vai pro banco
+          membros: membros ? { create: membros.map(({ nome, escopo }) => ({ nome: nome.trim(), escopo })) } : undefined,
           estudanteId: request.user.id, // dono vem sempre do token, nunca do corpo da requisição
         },
         include: { membros: true },
@@ -91,6 +97,11 @@ export async function trabalhosRoutes(app) {
     }
     const { titulo, disciplina, prazoEntrega, dataAlarme, linksUteis, status } = request.body;
 
+    const erroCampos = validarTrabalho({ titulo, disciplina, linksUteis, status });
+    if (erroCampos) {
+      return reply.status(400).send({ error: erroCampos });
+    }
+
     // Mesma validação do POST: data inválida vira 400, não erro 500 do Prisma
     if (prazoEntrega && isNaN(new Date(prazoEntrega).getTime())) {
       return reply.status(400).send({ error: 'prazoEntrega inválido' });
@@ -106,6 +117,9 @@ export async function trabalhosRoutes(app) {
       const { count } = await prisma.trabalhoGrupo.updateMany({
         where: { id: idNum, estudanteId: request.user.id },
         data: {
+        // updatedAt sempre muda: com um PUT sem nenhum campo novo o data ficaria
+        // vazio e o Prisma contaria 0 linhas, devolvendo 404 pra um item que existe
+        updatedAt: new Date(),
           ...(titulo && { titulo }),
           ...(disciplina !== undefined && { disciplina }),
           ...(prazoEntrega && { prazoEntrega: new Date(prazoEntrega) }),
