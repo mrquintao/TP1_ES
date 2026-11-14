@@ -1,43 +1,13 @@
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
-import { registrarJwt } from './plugins/jwt.js';
-import { authRoutes } from './routes/auth.js';
-import { avaliacoesRoutes } from './routes/avaliacoes.js';
-import { trabalhosRoutes } from './routes/trabalhos.js';
-import { habitosRoutes } from './routes/habitos.js';
-import { calendarioRoutes } from './routes/calendario.js';
+import { buildApp } from './app.js';
 import { agendarResetHabitos } from './jobs/resetHabitos.js';
 import { agendarNotificacoes } from './jobs/notificacoes.js';
 
-// Cria a instância do Fastify com logs ativados
-const app = Fastify({ logger: true });
-
-// Registra o plugin de CORS (restringe ao frontend configurado)
-await app.register(cors, {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-});
-
-// Registra o plugin de autenticação (JWT) — usado pelas rotas de auth e
-// pelo hook que protege as rotas de dados (src/hooks/autenticar.js)
-await registrarJwt(app);
-
-// Rotas de autenticação (públicas — cadastro e login não exigem token)
-await app.register(authRoutes, { prefix: '/api/auth' });
-
-// Registra as rotas de cada entidade com prefixo /api
-await app.register(avaliacoesRoutes, { prefix: '/api/avaliacoes' });
-await app.register(trabalhosRoutes, { prefix: '/api/trabalhos' });
-await app.register(habitosRoutes, { prefix: '/api/habitos' });
-await app.register(calendarioRoutes, { prefix: '/api/calendario' });
+// Cria o app (plugins + rotas) com logs ativados
+const app = await buildApp();
 
 // Agenda os jobs diários
 agendarResetHabitos(app.log);
 agendarNotificacoes(app.log);
-
-// Rota de health check
-app.get('/api/health', async () => {
-  return { status: 'ok', timestamp: new Date().toISOString() };
-});
 
 // Inicia o servidor na porta definida pela env ou 3000
 const PORT = process.env.PORT || 3000;
