@@ -175,13 +175,41 @@ A partir daí, todo dia às 08h (horário de Brasília) cada estudante recebe �
 
 ---
 
+## 🧪 Testes Automatizados
+
+| Tipo | Onde | O que cobre |
+|---|---|---|
+| Unitários (backend) | `backend/test/urgencia.test.js` | Regra de urgência/atraso e o dia em fuso de Brasília |
+| Unitários (frontend) | `frontend/test/links.test.js` | Normalização e deduplicação de links |
+| Integração (API) | `backend/test/auth.test.js`, `isolamento.test.js`, `validacao.test.js`, `notificacoes.test.js` | Cadastro/login, isolamento entre estudantes, validações, limite do calendário, reset de hábitos e falhas no envio de e-mail |
+| E2E (Playwright) | `e2e/` | Fluxos completos pela interface (precisa do sistema no ar) |
+
+Os testes unitários usam o `node:test` do próprio Node (sem dependências extras):
+
+```bash
+cd frontend && npm test
+cd backend && npm test      # sem DATABASE_URL, os de integração são pulados
+```
+
+Os de integração usam um PostgreSQL real. Com o banco do compose no ar (`docker compose up -d db`):
+
+```bash
+cd backend
+DATABASE_URL=postgresql://studysync:studysync123@localhost:5432/studysync npx prisma db push
+DATABASE_URL=postgresql://studysync:studysync123@localhost:5432/studysync npm test
+```
+
+Os usuários criados nos testes têm e-mail começando com `it-` e são apagados ao final. Os testes E2E: `cd e2e && npm install && npx playwright install chromium && npm test`.
+
+---
+
 ## 📱 Tutorial Rápido — Funcionalidades
 
 1. **Cadastro / Login** (`/cadastro`, `/login`) — crie uma conta com nome, e-mail e senha. Cada conta só enxerga os próprios dados (provas, trabalhos e hábitos de outro estudante nunca aparecem).
 2. **Meu Dia** (`/`) — visão do dia: checklist de hábitos e a seção **🚨 Urgentes**, que reúne provas/trabalhos com o alarme já ativo, marcando em vermelho "Atrasado" quando o prazo passou sem o item ser concluído.
 3. **Provas** (`/provas`) — cadastro com disciplina, peso e data da prova. O campo "alarme" é opcional: se deixado em branco, o sistema sugere automaticamente uma data alguns dias antes do prazo.
 4. **Trabalhos** (`/trabalhos`) — trabalhos em grupo com membros (nome + parte de que cada um é responsável), status (pendente / em andamento / concluído) e links úteis (enunciados, materiais de apoio).
-5. **Hábitos** (`/habitos`) — tarefas recorrentes (diárias ou semanais) com checklist que reseta sozinho à meia-noite (fuso de Brasília).
+5. **Hábitos** (`/habitos`) — tarefas recorrentes (diárias ou semanais) com checklist que reseta sozinho à meia-noite (fuso de Brasília); os semanais resetam toda segunda-feira.
 6. **Calendário** (`/calendario`) — visão mensal e semanal de tudo, com filtros por tipo (prova / trabalho / hábito).
 7. **Configurações** (`/configuracoes`) — liga/desliga, individualmente, o lembrete diário por e-mail e o aviso de itens que entraram em "Urgentes".
 
