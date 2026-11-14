@@ -6,8 +6,8 @@ import { buildApp } from '../src/app.js';
 export const temBanco = !!process.env.DATABASE_URL;
 process.env.JWT_SECRET ||= 'segredo-de-teste';
 
-// Todo e-mail criado nos testes começa com este prefixo, pra limpar só o que é nosso
-const PREFIXO = 'it-';
+// Todo e-mail criado nesta execução começa com este prefixo, pra limpar só o que é nosso
+const PREFIXO = `it-${process.pid}-`; // por processo: arquivos de teste rodam em paralelo
 
 export async function criarApp() {
   const app = await buildApp({ logger: false });

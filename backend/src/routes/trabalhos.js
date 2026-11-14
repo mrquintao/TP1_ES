@@ -91,6 +91,14 @@ export async function trabalhosRoutes(app) {
     }
     const { titulo, disciplina, prazoEntrega, dataAlarme, linksUteis, status } = request.body;
 
+    // Mesma validação do POST: data inválida vira 400, não erro 500 do Prisma
+    if (prazoEntrega && isNaN(new Date(prazoEntrega).getTime())) {
+      return reply.status(400).send({ error: 'prazoEntrega inválido' });
+    }
+    if (dataAlarme && isNaN(new Date(dataAlarme).getTime())) {
+      return reply.status(400).send({ error: 'dataAlarme inválida' });
+    }
+
     try {
       // updateMany com id + estudanteId no where: 0 linhas afetadas cobre
       // tanto "não existe" quanto "existe mas é de outro estudante" — a

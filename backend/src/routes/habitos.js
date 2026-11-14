@@ -15,6 +15,18 @@ export async function resetarHabitosDiarios() {
 }
 
 /**
+ * Desmarca os hábitos semanais de TODOS os estudantes. Roda uma vez por
+ * semana (segunda, meia-noite) pelo agendador — sem isso, um hábito semanal
+ * marcado como concluído nunca voltaria a ficar desmarcado.
+ */
+export async function resetarHabitosSemanais() {
+  await prisma.habito.updateMany({
+    where: { recorrencia: 'semanal' },
+    data: { concluidoHoje: false },
+  });
+}
+
+/**
  * Rotas CRUD para Hábitos e tarefas recorrentes
  * Prefixo: /api/habitos — todas exigem login; cada estudante só vê/edita os próprios.
  */

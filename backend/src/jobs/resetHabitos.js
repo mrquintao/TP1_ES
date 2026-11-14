@@ -1,10 +1,11 @@
 import cron from 'node-cron';
-import { resetarHabitosDiarios } from '../routes/habitos.js';
+import { resetarHabitosDiarios, resetarHabitosSemanais } from '../routes/habitos.js';
 
 // "0 0 * * *" = minuto 0, hora 0, todo dia → meia-noite.
 // O fuso é fixado aqui porque o container roda em UTC, e a meia-noite
 // do estudante é no horário de Brasília.
 const MEIA_NOITE = '0 0 * * *';
+const SEGUNDA_MEIA_NOITE = '0 0 * * 1'; // dia da semana 1 = segunda
 const FUSO_HORARIO = 'America/Sao_Paulo';
 
 /**
@@ -27,5 +28,19 @@ export function agendarResetHabitos(log) {
     { timezone: FUSO_HORARIO }
   );
 
-  log.info(`Reset de hábitos agendado (${MEIA_NOITE}, ${FUSO_HORARIO})`);
+  // Hábitos semanais voltam a ficar desmarcados toda segunda-feira, à meia-noite
+  cron.schedule(
+    SEGUNDA_MEIA_NOITE,
+    async () => {
+      try {
+        await resetarHabitosSemanais();
+        log.info('Hábitos semanais resetados pelo agendador de segunda-feira');
+      } catch (err) {
+        log.error(err, 'Falha ao resetar hábitos semanais');
+      }
+    },
+    { timezone: FUSO_HORARIO }
+  );
+
+  log.info(`Reset de hábitos agendado (${MEIA_NOITE} e ${SEGUNDA_MEIA_NOITE}, ${FUSO_HORARIO})`);
 }
