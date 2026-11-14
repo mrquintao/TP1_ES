@@ -12,10 +12,12 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: studysync
-      POSTGRES_PASSWORD: studysync123
+      # Senha vem do .env (ver .env.example); o valor padrão é só pra desenvolvimento
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-studysync123}
       POSTGRES_DB: studysync
     ports:
-      - "5432:5432"
+      # Só a própria máquina acessa o banco (não a rede)
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -34,12 +36,12 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://studysync:studysync123@db:5432/studysync
+      DATABASE_URL: postgresql://studysync:${POSTGRES_PASSWORD:-studysync123}@db:5432/studysync
       PORT: 3000
       NODE_ENV: development
-      # Segredo de dev p/ assinar os tokens de login — trocar por um valor
-      # forte e privado antes de qualquer deploy real.
-      JWT_SECRET: studysync-dev-secret-troque-em-producao
+      # Segredo p/ assinar os tokens de login. Vem do .env; o padrão é só de
+      # desenvolvimento — defina um valor forte e privado antes de qualquer deploy.
+      JWT_SECRET: ${JWT_SECRET:-studysync-dev-secret-troque-em-producao}
       # Opcionais: sem elas, o job de notificações roda normal só sem enviar
       # e-mail de verdade (fallback já testado). Vêm de um `.env` na raiz
       # (não versionado) — ver `.env.example`.
