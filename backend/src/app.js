@@ -28,6 +28,12 @@ export async function buildApp({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   });
 
+  // POST/PUT sem corpo (ou sem Content-Type) chegavam com body undefined e as
+  // rotas quebravam ao desestruturar; assim eles caem na validação normal (400)
+  app.addHook('preValidation', async (request) => {
+    if (request.body == null) request.body = {};
+  });
+
   // Plugin de JWT — usado pelas rotas de auth e pelo hook que protege as rotas de dados
   await registrarJwt(app);
 

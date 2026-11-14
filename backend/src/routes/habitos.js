@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma.js';
 import { autenticar } from '../hooks/autenticar.js';
+import { validarHabito } from '../lib/validacao.js';
 
 /**
  * Desmarca os hábitos diários de TODOS os estudantes (concluidoHoje = false).
@@ -55,6 +56,11 @@ export async function habitosRoutes(app) {
       return reply.status(400).send({ error: 'Campo obrigatório: descricao' });
     }
 
+    const erroCampos = validarHabito({ descricao, recorrencia });
+    if (erroCampos) {
+      return reply.status(400).send({ error: erroCampos });
+    }
+
     try {
       const habito = await prisma.habito.create({
         data: {
@@ -79,6 +85,11 @@ export async function habitosRoutes(app) {
     }
     const { descricao, recorrencia, concluidoHoje } = request.body;
 
+    const erroCampos = validarHabito({ descricao, recorrencia, concluidoHoje });
+    if (erroCampos) {
+      return reply.status(400).send({ error: erroCampos });
+    }
+
     try {
       // updateMany com id + estudanteId no where: 0 linhas afetadas cobre
       // tanto "não existe" quanto "existe mas é de outro estudante" — a
@@ -86,6 +97,9 @@ export async function habitosRoutes(app) {
       const { count } = await prisma.habito.updateMany({
         where: { id: idNum, estudanteId: request.user.id },
         data: {
+        // updatedAt sempre muda: com um PUT sem nenhum campo novo o data ficaria
+        // vazio e o Prisma contaria 0 linhas, devolvendo 404 pra um item que existe
+        updatedAt: new Date(),
           ...(descricao && { descricao }),
           ...(recorrencia && { recorrencia }),
           ...(concluidoHoje !== undefined && { concluidoHoje }),
