@@ -8,18 +8,22 @@ const HORARIO_NOTIFICACAO = '0 8 * * *';
 const FUSO_HORARIO = 'America/Sao_Paulo';
 const DIAS_LEMBRETE = 3; // avisa sobre prazos até N dias à frente
 
+// Datas são salvas como meia-noite UTC do dia escolhido; formatar no fuso
+// local do servidor mostraria o dia anterior em qualquer fuso negativo
+const formatarData = (data) => data.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+
 // Seção do e-mail com os prazos dos próximos dias, ou '' se não houver nada
 function secaoLembrete(avaliacoes, trabalhos) {
   if (avaliacoes.length === 0 && trabalhos.length === 0) return '';
   let html = `<h3>📅 Prazos dos próximos ${DIAS_LEMBRETE} dias</h3>`;
   if (avaliacoes.length > 0) {
     html += '<p><strong>📝 Provas:</strong></p><ul>';
-    avaliacoes.forEach((a) => { html += `<li>${escaparHtml(a.disciplina)}: ${a.dataRealizacao.toLocaleDateString('pt-BR')}</li>`; });
+    avaliacoes.forEach((a) => { html += `<li>${escaparHtml(a.disciplina)}: ${formatarData(a.dataRealizacao)}</li>`; });
     html += '</ul>';
   }
   if (trabalhos.length > 0) {
     html += '<p><strong>👥 Trabalhos:</strong></p><ul>';
-    trabalhos.forEach((t) => { html += `<li>${escaparHtml(t.titulo)}: ${t.prazoEntrega.toLocaleDateString('pt-BR')}</li>`; });
+    trabalhos.forEach((t) => { html += `<li>${escaparHtml(t.titulo)}: ${formatarData(t.prazoEntrega)}</li>`; });
     html += '</ul>';
   }
   return html;
