@@ -179,27 +179,55 @@ A partir daí, todo dia às 08h (horário de Brasília) cada estudante recebe �
 
 | Tipo | Onde | O que cobre |
 |---|---|---|
-| Unitários (backend) | `backend/test/urgencia.test.js` | Regra de urgência/atraso e o dia em fuso de Brasília |
-| Unitários (frontend) | `frontend/test/links.test.js` | Normalização e deduplicação de links |
-| Integração (API) | `backend/test/auth.test.js`, `isolamento.test.js`, `validacao.test.js`, `notificacoes.test.js` | Cadastro/login, isolamento entre estudantes, validações, limite do calendário, reset de hábitos e falhas no envio de e-mail |
-| E2E (Playwright) | `e2e/` | Fluxos completos pela interface (precisa do sistema no ar) |
+| Unitários (backend) | `backend/test/urgencia.test.js`, `html.test.js`, `email.test.js`, `jobs.test.js` | Regra de urgência/atraso no fuso de Brasília, escape de HTML, envio pelo SendGrid (com o SendGrid simulado) e os agendadores da meia-noite e das 8h |
+| Unitários (frontend) | `frontend/test/*.test.js` | Regra de "Urgentes", sugestão de alarme, datas sem o bug do "dia anterior", grade do calendário, links e token de login |
+| Integração (API + banco) | `backend/test/auth*.test.js`, `isolamento`, `crud`, `habitos`, `calendario`, `validacao`, `entrada`, `notificacoes*` | Cadastro/login e rate limit, isolamento entre estudantes, CRUD completo, reset manual só dos próprios hábitos, calendário (expansão de hábitos), validações e o conteúdo/regras do e-mail de notificação |
+| E2E (Playwright) | `e2e/tests/` | 5 fluxos pela interface (abaixo) |
 
-Os testes unitários usam o `node:test` do próprio Node (sem dependências extras):
+Os testes unitários e de integração usam o `node:test` do próprio Node (**Node 22 ou mais novo**) e a cobertura é medida com o [c8](https://github.com/bcoe/c8). O mínimo configurado é **80%** de linhas, branches, funções e statements: abaixo disso, `npm run test:coverage` falha.
+
+**Frontend** (não precisa de banco):
 
 ```bash
-cd frontend && npm test
-cd backend && npm test      # sem DATABASE_URL, os de integração são pulados
+cd frontend
+npm test
+npm run test:coverage   # cobre src/utils; os componentes são exercitados pelos E2E
 ```
 
-Os de integração usam um PostgreSQL real. Com o banco do compose no ar (`docker compose up -d db`):
+**Backend:** os testes de integração usam um PostgreSQL real, num banco **separado** (`studysync_test`), pra nunca mexer nos dados do app. Uma vez só, com o compose no ar:
+
+```bash
+docker compose exec db psql -U studysync -c "CREATE DATABASE studysync_test"
+cd backend
+DATABASE_URL=postgresql://studysync:studysync123@localhost:5432/studysync_test npx prisma db push
+```
+
+Depois, sempre que quiser rodar:
 
 ```bash
 cd backend
-DATABASE_URL=postgresql://studysync:studysync123@localhost:5432/studysync npx prisma db push
-DATABASE_URL=postgresql://studysync:studysync123@localhost:5432/studysync npm test
+DATABASE_URL=postgresql://studysync:studysync123@localhost:5432/studysync_test npm run test:coverage
 ```
 
-Os usuários criados nos testes têm e-mail começando com `it-` e são apagados ao final. Os testes E2E: `cd e2e && npm install && npx playwright install chromium && npm test`.
+Sem `DATABASE_URL`, `npm test` roda só os unitários e pula os de integração. Os usuários criados nos testes têm e-mail começando com `it-` e são apagados ao final. O relatório HTML de cobertura fica em `coverage/index.html` (backend e frontend).
+
+**E2E** (precisa do sistema no ar com `docker compose up`):
+
+```bash
+cd e2e
+npm install
+npx playwright install chromium
+npm test              # ou npm run test:headed para ver o navegador
+```
+
+| Teste | Fluxo |
+|---|---|
+| `trabalho-calendario` | Cria um trabalho e o encontra no calendário, com os detalhes |
+| `autenticacao` | Sair, rota protegida, uma conta não vê os dados da outra, senha errada recusada, login de volta |
+| `urgentes` | Alarme coloca o trabalho em "Urgente" e a prova vencida em "Atrasado"; concluir o trabalho o tira da lista |
+| `habitos-configuracoes` | Marcar hábito atualiza o progresso e persiste; "Resetar Dia" desmarca; preferências de e-mail ficam salvas |
+
+> Cadastro e login têm limite de 20 tentativas por minuto por IP (proteção contra força bruta). Cada execução dos E2E faz ~8 cadastros/logins: rodar várias vezes seguidas em menos de 1 minuto pode estourar o limite. Basta esperar 1 minuto.
 
 ---
 
