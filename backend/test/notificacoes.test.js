@@ -7,7 +7,7 @@ import { temBanco, criarApp, cadastrar, comToken } from './helpers.js';
 const tentativas = [];
 const htmls = {}; // html enviado, por destinatário
 mock.module('../src/lib/email.js', {
-  exports: {
+  namedExports: {
     enviarEmail: async ({ to }) => {
       tentativas.push(to);
       if (tentativas.length === 1) throw new Error('SendGrid recusou o envio');
