@@ -29,3 +29,6 @@ docker-compose.override.yml
 
 # Notas locais de progresso (não vai pro repo)
 PROGRESSO.md
+
+# Relatórios de cobertura de testes (gerados pelo c8)
+coverage/

@@ -8,6 +8,7 @@
     "dev": "npx prisma db push && node --watch src/server.js",
     "start": "node src/server.js",
     "test": "node --experimental-test-module-mocks --test \"test/*.test.js\"",
+    "test:coverage": "c8 node --experimental-test-module-mocks --test \"test/*.test.js\"",
     "db:migrate": "npx prisma migrate dev",
     "db:seed": "node prisma/seed.js",
     "db:studio": "npx prisma studio"
@@ -23,6 +24,7 @@
     "node-cron": "^4.6.0"
   },
   "devDependencies": {
+    "c8": "^12.0.0",
     "prisma": "^6.0.0"
   }
 }
