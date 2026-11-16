@@ -49,11 +49,11 @@ async function buscarUrgentesNovos(estudanteId) {
   const itens = [];
   for (const a of avaliacoes) {
     const estado = estadoUrgencia({ dataAlarme: a.dataAlarme, dataLimite: a.dataRealizacao });
-    if (estado) itens.push({ tipo: 'avaliacao', id: a.id, titulo: `📝 ${escaparHtml(a.disciplina)}`, estado });
+    if (estado) itens.push({ tipo: 'avaliacao', id: a.id, titulo: `📝 ${a.disciplina}`, estado });
   }
   for (const t of trabalhos) {
     const estado = estadoUrgencia({ dataAlarme: t.dataAlarme, dataLimite: t.prazoEntrega });
-    if (estado) itens.push({ tipo: 'trabalho', id: t.id, titulo: `👥 ${escaparHtml(t.titulo)}`, estado });
+    if (estado) itens.push({ tipo: 'trabalho', id: t.id, titulo: `👥 ${t.titulo}`, estado });
   }
   return itens;
 }
