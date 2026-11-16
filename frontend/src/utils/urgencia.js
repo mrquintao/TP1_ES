@@ -1,5 +1,5 @@
-import { parseDataLocal } from './dates';
-import { chaveData } from './calendario';
+import { parseDataLocal } from './dates.js';
+import { chaveData } from './calendario.js';
 
 // Quantos dias antes do prazo o alarme é sugerido, quando o formulário
 // ainda não tem uma data de alarme preenchida manualmente.
