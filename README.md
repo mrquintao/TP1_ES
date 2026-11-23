@@ -236,6 +236,144 @@ npm test              # ou npm run test:headed para ver o navegador
 
 ---
 
+## 🎤 Roteiro de Testes — Apresentação do TP2
+
+Passo a passo para subir o ambiente, rodar todos os testes e mostrar os resultados (apresentação de 12 min). Os comandos são para o **PowerShell** (Windows), a partir da raiz do repositório. No Git Bash/Linux/macOS, troque `$env:DATABASE_URL="..."; comando` por `DATABASE_URL=... comando`.
+
+### 0. Pré-requisitos
+
+* **Docker Desktop** instalado e **aberto** (o ícone da baleia sem "starting").
+* **Node.js 22 ou mais novo** (`node --version`). Os testes do backend usam `mock.module` do `node:test`, que não existe no Node 20.
+* Repositório atualizado: `git pull`.
+
+### 1. Preparação (uma vez só, de preferência antes da aula)
+
+```bash
+cd backend; npm install; cd ..
+cd frontend; npm install; cd ..
+cd e2e; npm install; npx playwright install chromium; cd ..
+```
+
+Subir o ambiente e criar o banco de testes (separado do banco do app, para os testes nunca mexerem nos dados de demonstração):
+
+```bash
+docker compose up -d
+docker compose exec db psql -U studysync -c "CREATE DATABASE studysync_test"
+cd backend; $env:DATABASE_URL="postgresql://studysync:studysync123@127.0.0.1:5432/studysync_test"; npx prisma db push; cd ..
+```
+
+Se o `CREATE DATABASE` responder `already exists`, tudo certo: o banco já existe.
+
+### 2. No dia: subir e conferir o ambiente (~1 min, antes de começar)
+
+```bash
+docker compose up -d
+docker compose ps
+```
+
+Os três serviços (`studysync-db`, `studysync-backend`, `studysync-frontend`) devem estar `Up`, e o banco `healthy`. Conferir também:
+
+* API: http://localhost:3000/api/health → `{"status":"ok", ...}`
+* App: http://localhost:5173 → tela de login
+
+> ⚠️ **Não pule esta conferência.** Com o Docker parado, os testes de integração não mostram "sem conexão": a API responde erro 500 e aparecem dezenas de falhas de asserção, o que confunde na hora.
+
+### 3. Parte 1 — Testes de unidade/integração + cobertura (~2 min)
+
+**Backend** (86 testes: unidade + integração com PostgreSQL real):
+
+```bash
+cd backend; $env:DATABASE_URL="postgresql://studysync:studysync123@127.0.0.1:5432/studysync_test"; npm run test:coverage; cd ..
+```
+
+**Frontend: funções utilitárias** (33 testes, `node:test` + c8):
+
+```bash
+cd frontend; npm run test:coverage; cd ..
+```
+
+**Frontend: componentes React** (30 testes, Vitest + Testing Library no jsdom):
+
+```bash
+cd frontend; npm run test:components:coverage; cd ..
+```
+
+**Mostrar os relatórios visuais de cobertura** (linhas não testadas aparecem em vermelho, dá pra clicar em cada arquivo):
+
+```bash
+start backend\coverage\index.html
+start frontend\coverage\components\index.html
+```
+
+Os três comandos de cobertura **falham sozinhos se qualquer métrica cair abaixo de 80%**, então "passou" já significa "cobertura mínima atingida".
+
+### 4. Parte 2 — Testes E2E com Playwright (~4 min)
+
+Com o ambiente no ar (passo 2), rodar com o navegador visível:
+
+```bash
+cd e2e; npm run test:headed; cd ..
+```
+
+Depois, o relatório do Playwright, com cada passo de cada teste:
+
+```bash
+cd e2e; npm run report; cd ..
+```
+
+| Teste | O que acontece na tela |
+|---|---|
+| `trabalho-calendario` | Cadastra um usuário, cria um trabalho e o encontra no calendário, abrindo os detalhes |
+| `autenticacao` | Conta A cria uma prova e sai; páginas internas redirecionam para o login; conta B não vê a prova de A; senha errada é recusada; A entra de novo e vê a prova |
+| `urgentes` | Trabalho com alarme hoje aparece como **Urgente** e prova vencida como **Atrasado** na Home; concluir o trabalho o tira de "Urgentes" |
+| `habitos-configuracoes` (2 testes) | Marcar hábito atualiza o progresso e persiste após recarregar; "Resetar Dia" desmarca; desligar o lembrete por e-mail em Configurações fica salvo |
+
+> ⚠️ **Rode os E2E uma vez só.** Cadastro/login aceitam 20 tentativas por minuto por IP e cada execução usa ~8. Se aparecer falha logo no cadastro (a página não sai de `/cadastro`), espere 1 minuto e rode de novo.
+
+### 5. Resultados esperados
+
+| Comando | Testes | Linhas | Branches | Funções |
+|---|---|---|---|---|
+| Backend `test:coverage` | 86 ✅ | 94% | 91% | 97,7% |
+| Frontend `test:coverage` (utils) | 33 ✅ | 100% | 100% | 100% |
+| Frontend `test:components:coverage` | 30 ✅ | 100% | 98,5% | 100% |
+| E2E (Playwright) | 5 ✅ | — | — | — |
+
+No backend a cobertura conta **todos** os arquivos de `src/` (`all: true` no c8), inclusive os que nenhum teste importa. Só fica de fora o `server.js`, que apenas sobe o servidor.
+
+### 6. Parte 3 — Comentários sobre o uso de IA (~5 min): pontos para discutir
+
+* **Ferramentas:** Claude Code, Codex, ChatGPT e Gemini (as mesmas do TP1, seguindo o [AI_RULES.md](./AI_RULES.md)).
+* **Positivo, os testes acharam bugs reais:** o título de item urgente era escapado duas vezes no e-mail (`P&D` virava `P&amp;amp;D`), e a data do lembrete saía um dia antes em servidor com fuso de Brasília. Os dois foram corrigidos em commits próprios.
+* **Positivo, testes de mutação:** quebrar de propósito regras importantes (recorrência semanal, isolamento do reset de hábitos, reenvio de notificação, regra de atraso) e confirmar que algum teste falha. É a forma de checar se os testes cobrem casos importantes, e não só linhas.
+* **Ponto de atenção, a métrica de cobertura engana:** a cobertura nativa do Node só conta arquivos importados por algum teste; ela mostrava 81,8% enquanto a real, com todos os arquivos, era 77,3%. Trocar para o c8 com `all: true` resolveu.
+* **Ponto de atenção, compatibilidade:** um teste gerado usava uma opção do `mock.module` que só existe em Node mais novo; no Node 22 o arquivo inteiro nem carregava.
+* **Ponto de atenção, E2E frágil:** o `check()` do Playwright falhava porque os checkboxes só mudam depois que a API confirma; a solução foi `click()` + `expect(...).toBeChecked()`, que espera.
+* **Todos os testes foram revisados, entendidos e rodados pelo grupo** antes de cada commit.
+
+### 7. Parte 4 — Divisão do trabalho (~1 min)
+
+Coincide com a autoria dos commits no repositório:
+
+| Integrante | Contribuição no TP2 |
+|---|---|
+| **Guilherme** | Base dos testes (`buildApp`, helpers), testes de integração de autenticação, isolamento e validação, testes unitários iniciais, e as correções de segurança que vieram com eles (rate limit, validação de entrada, escape de HTML) |
+| **Mateus** | Configuração do Playwright e o primeiro E2E; testes de componentes React com Vitest + Testing Library (calendário, formulários, Urgentes, rota protegida, navbar) |
+| **Lucas** | Banco de testes separado, cobertura com c8 e mínimo de 80%, testes de CRUD, calendário, hábitos, agendadores e e-mail de notificação, testes das funções do frontend, 3 E2E (autenticação, urgentes, hábitos/configurações) e as 2 correções de bugs achados pelos testes |
+
+### 8. Se algo der errado
+
+| Sintoma | Causa provável | O que fazer |
+|---|---|---|
+| Dezenas de falhas no backend, com `500` ou `.map is not a function` | Docker/banco parado | `docker compose up -d` e esperar o `db` ficar `healthy` |
+| `bad option: --experimental-test-module-mocks` | Node antigo | Usar Node 22+ |
+| `database "studysync_test" does not exist` | Banco de testes não criado | Rodar o passo 1 |
+| E2E falha logo no cadastro | Limite de 20 cadastros/logins por minuto | Esperar 1 minuto |
+| E2E não abre a página | Frontend ou backend fora do ar | Conferir http://localhost:5173 e http://localhost:3000/api/health |
+| `Executable doesn't exist` no Playwright | Chromium não instalado | `cd e2e; npx playwright install chromium; cd ..` |
+
+---
+
 ## 📱 Tutorial Rápido — Funcionalidades
 
 1. **Cadastro / Login** (`/cadastro`, `/login`) — crie uma conta com nome, e-mail e senha. Cada conta só enxerga os próprios dados (provas, trabalhos e hábitos de outro estudante nunca aparecem).
