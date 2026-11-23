@@ -181,6 +181,7 @@ A partir daí, todo dia às 08h (horário de Brasília) cada estudante recebe �
 |---|---|---|
 | Unitários (backend) | `backend/test/urgencia.test.js`, `html.test.js`, `email.test.js`, `jobs.test.js` | Regra de urgência/atraso no fuso de Brasília, escape de HTML, envio pelo SendGrid (com o SendGrid simulado) e os agendadores da meia-noite e das 8h |
 | Unitários (frontend) | `frontend/test/*.test.js` | Regra de "Urgentes", sugestão de alarme, datas sem o bug do "dia anterior", grade do calendário, links e token de login |
+| Componentes (frontend) | `frontend/test/components/*.test.jsx` | Grade, controles e modal do calendário, formulários de prova e trabalho, links úteis, seção "Urgentes", rota protegida e navbar, renderizados no jsdom |
 | Integração (API + banco) | `backend/test/auth*.test.js`, `isolamento`, `crud`, `habitos`, `calendario`, `validacao`, `entrada`, `notificacoes*` | Cadastro/login e rate limit, isolamento entre estudantes, CRUD completo, reset manual só dos próprios hábitos, calendário (expansão de hábitos), validações e o conteúdo/regras do e-mail de notificação |
 | E2E (Playwright) | `e2e/tests/` | 5 fluxos pela interface (abaixo) |
 
@@ -190,9 +191,13 @@ Os testes unitários e de integração usam o `node:test` do próprio Node (**No
 
 ```bash
 cd frontend
-npm test
-npm run test:coverage   # cobre src/utils; os componentes são exercitados pelos E2E
+npm test                           # utils, com node:test
+npm run test:coverage              # cobertura de src/utils (c8)
+npm run test:components            # componentes React, com Vitest + Testing Library
+npm run test:components:coverage   # cobertura de src/components (mínimo de 80%)
 ```
+
+Os componentes rodam no Vitest porque o `node:test` não entende JSX. O relatório HTML deles fica em `frontend/coverage/components/index.html`.
 
 **Backend:** os testes de integração usam um PostgreSQL real, num banco **separado** (`studysync_test`), pra nunca mexer nos dados do app. Uma vez só, com o compose no ar:
 
